@@ -1,0 +1,8 @@
+# Ignorer le dossier task
+task/
+
+# Ignorer fichiers spécifiques
+GEMINI.md
+PROJECT.md
+todo.md
+lessons.md
