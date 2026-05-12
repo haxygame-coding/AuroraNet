@@ -5,9 +5,25 @@ import (
 	"auroranet/core/db"
 	"auroranet/core/internal/repository"
 	"log"
+	"net"
 	"net/http"
 	"os"
 )
+
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "localhost"
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return "localhost"
+}
 
 func main() {
 	dbPath := "auroranet.db"
@@ -32,7 +48,10 @@ func main() {
 	router := apiHandler.SetupRoutes()
 
 	port := ":8080"
+	localIP := getLocalIP()
 	log.Printf("Starting Core Backend server on %s...", port)
+	log.Printf("Dashboard available at: http://%s%s", localIP, port)
+	
 	if err := http.ListenAndServe(port, router); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

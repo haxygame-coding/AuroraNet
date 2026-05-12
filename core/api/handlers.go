@@ -3,6 +3,7 @@ package api
 import (
 	"auroranet/core/internal/models"
 	"auroranet/core/internal/repository"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -89,6 +90,59 @@ func NewAPI(repo repository.Repository) *API {
 	return &API{repo: repo}
 }
 
+// NodeAuthMiddleware protects agent-facing routes using node ID and secret.
+func (a *API) NodeAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		nodeID := r.Header.Get("X-Node-ID")
+		nodeSecret := r.Header.Get("X-Node-Secret")
+
+		if nodeID == "" || nodeSecret == "" {
+			http.Error(w, "missing node credentials", http.StatusUnauthorized)
+			return
+		}
+
+		node, err := a.repo.GetNodeWithSecret(nodeID, nodeSecret)
+		if err != nil || node == nil {
+			http.Error(w, "invalid node credentials", http.StatusUnauthorized)
+			return
+		}
+
+		// Store node in context for subsequent handlers
+		ctx := r.Context()
+		// Using a simple string key for prototype, consider custom type for production
+		r = r.WithContext(context.WithValue(ctx, "node", node))
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (a *API) GetNodeConfig(w http.ResponseWriter, r *http.Request) {
+	node, ok := r.Context().Value("node").(*models.Node)
+	if !ok {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Update last seen endpoint
+	// Note: RemoteAddr is "IP:port"
+	if err := a.repo.UpdateNodeEndpoint(node.ID, r.RemoteAddr); err != nil {
+		// Log but continue
+	}
+
+	peers, err := a.repo.ListPeers(node.NetworkID, node.ID)
+	if err != nil {
+		http.Error(w, "failed to fetch peers", http.StatusInternalServerError)
+		return
+	}
+
+	resp := models.NodeConfigResponse{
+		IPv4Address: node.IPv4Address,
+		Peers:       peers,
+	}
+
+	a.jsonResponse(w, http.StatusOK, resp)
+}
+
 // AuthMiddleware protects routes from unauthorized access.
 func (a *API) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +204,7 @@ func (a *API) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:  expiresAt,
 		HttpOnly: true,
 		Path:     "/",
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	a.jsonResponse(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -269,6 +323,48 @@ func (a *API) CreateNode(w http.ResponseWriter, r *http.Request) {
 func (a *API) DeleteNode(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if err := a.repo.DeleteNode(id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	a.jsonResponse(w, http.StatusNoContent, nil)
+}
+
+// Enrollment Token Handlers
+
+func (a *API) ListEnrollmentTokens(w http.ResponseWriter, r *http.Request) {
+	tokens, err := a.repo.ListEnrollmentTokens()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	a.jsonResponse(w, http.StatusOK, tokens)
+}
+
+func (a *API) CreateEnrollmentToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		NetworkID string `json:"network_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	token := &models.EnrollmentToken{
+		Token:     generateSecret(),
+		NetworkID: req.NetworkID,
+	}
+
+	if err := a.repo.CreateEnrollmentToken(token); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	a.jsonResponse(w, http.StatusCreated, token)
+}
+
+func (a *API) DeleteEnrollmentToken(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	if err := a.repo.DeleteEnrollmentToken(token); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

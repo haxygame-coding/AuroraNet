@@ -15,6 +15,7 @@ func main() {
 	configPath := flag.String("config", "agent_config.json", "Path to the agent configuration file")
 	backendURL := flag.String("backend", "http://localhost:8080", "Backend URL")
 	token := flag.String("token", "", "Enrollment token")
+	port := flag.Int("port", 0, "WireGuard listen port")
 	flag.Parse()
 
 	log.Println("Starting Auroranet Agent...")
@@ -30,6 +31,9 @@ func main() {
 	}
 	if cfg.EnrollmentToken == "" && *token != "" {
 		cfg.EnrollmentToken = *token
+	}
+	if *port != 0 {
+		cfg.ListenPort = *port
 	}
 
 	// 2. Initialize State Machine
@@ -104,8 +108,33 @@ func main() {
 			sm.Set(state.Active)
 
 		case state.Active:
-			// log.Println("Agent is active.")
-			// TODO: Implement actual WireGuard configuration and polling for peers
+			// 0. Ensure Interface exists
+			if wg != nil {
+				if err := wg.EnsureInterface(cfg.InterfaceName); err != nil {
+					log.Printf("Failed to ensure interface: %v", err)
+				}
+				if err := wg.SetIP(cfg.InterfaceName, cfg.IPv4Address); err != nil {
+					log.Printf("Failed to set IP: %v", err)
+				}
+			}
+
+			// 1. Fetch Config
+			resp, err := apiClient.GetConfig(cfg.NodeID, cfg.NodeSecret)
+			if err != nil {
+				log.Printf("Failed to fetch config: %v. Retrying in 10s...", err)
+				time.Sleep(10 * time.Second)
+				break
+			}
+
+			// 2. Apply WireGuard Config
+			if wg != nil {
+				if err := wg.ApplyConfig(cfg.InterfaceName, cfg.PrivateKey, cfg.ListenPort, resp.Peers); err != nil {
+					log.Printf("Failed to apply WireGuard config: %v", err)
+				} else {
+					log.Printf("Synced %d peers.", len(resp.Peers))
+				}
+			}
+
 			time.Sleep(30 * time.Second)
 
 		case state.Error:

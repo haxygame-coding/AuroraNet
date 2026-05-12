@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS nodes (
     public_key TEXT NOT NULL,
     ipv4_address TEXT NOT NULL,
     secret TEXT NOT NULL,
+    endpoint TEXT DEFAULT '',
+    last_seen_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (network_id) REFERENCES networks(id) ON DELETE CASCADE
 );

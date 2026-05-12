@@ -15,13 +15,18 @@ type Repository interface {
 	// Nodes
 	CreateNode(n *models.Node) error
 	GetNode(id string) (*models.Node, error)
+	GetNodeWithSecret(id, secret string) (*models.Node, error)
+	UpdateNodeEndpoint(id, endpoint string) error
 	ListNodes(networkID string) ([]models.Node, error)
+	ListPeers(networkID, excludeNodeID string) ([]models.Peer, error)
 	DeleteNode(id string) error
 
 	// Enrollment
 	GetEnrollmentToken(token string) (*models.EnrollmentToken, error)
 	ConsumeToken(token string) error
 	CreateEnrollmentToken(t *models.EnrollmentToken) error
+	ListEnrollmentTokens() ([]models.EnrollmentToken, error)
+	DeleteEnrollmentToken(token string) error
 	GetNextAvailableIP(networkID string) (string, error)
 
 	// Sessions
@@ -90,10 +95,14 @@ func (r *SQLiteRepository) CreateNode(n *models.Node) error {
 
 func (r *SQLiteRepository) GetNode(id string) (*models.Node, error) {
 	n := &models.Node{}
-	query := `SELECT id, network_id, name, public_key, ipv4_address, secret, created_at FROM nodes WHERE id = ?`
-	err := r.db.QueryRow(query, id).Scan(&n.ID, &n.NetworkID, &n.Name, &n.PublicKey, &n.IPv4Address, &n.Secret, &n.CreatedAt)
+	query := `SELECT id, network_id, name, public_key, ipv4_address, secret, endpoint, last_seen_at, created_at FROM nodes WHERE id = ?`
+	var lastSeen sql.NullTime
+	err := r.db.QueryRow(query, id).Scan(&n.ID, &n.NetworkID, &n.Name, &n.PublicKey, &n.IPv4Address, &n.Secret, &n.Endpoint, &lastSeen, &n.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
+	}
+	if lastSeen.Valid {
+		n.LastSeenAt = lastSeen.Time
 	}
 	return n, err
 }
@@ -102,10 +111,10 @@ func (r *SQLiteRepository) ListNodes(networkID string) ([]models.Node, error) {
 	var query string
 	var args []interface{}
 	if networkID != "" {
-		query = `SELECT id, network_id, name, public_key, ipv4_address, secret, created_at FROM nodes WHERE network_id = ?`
+		query = `SELECT id, network_id, name, public_key, ipv4_address, secret, endpoint, last_seen_at, created_at FROM nodes WHERE network_id = ?`
 		args = append(args, networkID)
 	} else {
-		query = `SELECT id, network_id, name, public_key, ipv4_address, secret, created_at FROM nodes`
+		query = `SELECT id, network_id, name, public_key, ipv4_address, secret, endpoint, last_seen_at, created_at FROM nodes`
 	}
 
 	rows, err := r.db.Query(query, args...)
@@ -117,12 +126,55 @@ func (r *SQLiteRepository) ListNodes(networkID string) ([]models.Node, error) {
 	var nodes []models.Node
 	for rows.Next() {
 		var n models.Node
-		if err := rows.Scan(&n.ID, &n.NetworkID, &n.Name, &n.PublicKey, &n.IPv4Address, &n.Secret, &n.CreatedAt); err != nil {
+		var lastSeen sql.NullTime
+		if err := rows.Scan(&n.ID, &n.NetworkID, &n.Name, &n.PublicKey, &n.IPv4Address, &n.Secret, &n.Endpoint, &lastSeen, &n.CreatedAt); err != nil {
 			return nil, err
+		}
+		if lastSeen.Valid {
+			n.LastSeenAt = lastSeen.Time
 		}
 		nodes = append(nodes, n)
 	}
 	return nodes, nil
+}
+
+func (r *SQLiteRepository) GetNodeWithSecret(id, secret string) (*models.Node, error) {
+	n := &models.Node{}
+	query := `SELECT id, network_id, name, public_key, ipv4_address, secret, endpoint, last_seen_at, created_at FROM nodes WHERE id = ? AND secret = ?`
+	var lastSeen sql.NullTime
+	err := r.db.QueryRow(query, id, secret).Scan(&n.ID, &n.NetworkID, &n.Name, &n.PublicKey, &n.IPv4Address, &n.Secret, &n.Endpoint, &lastSeen, &n.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if lastSeen.Valid {
+		n.LastSeenAt = lastSeen.Time
+	}
+	return n, err
+}
+
+func (r *SQLiteRepository) UpdateNodeEndpoint(id, endpoint string) error {
+	query := `UPDATE nodes SET endpoint = ?, last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := r.db.Exec(query, endpoint, id)
+	return err
+}
+
+func (r *SQLiteRepository) ListPeers(networkID, excludeNodeID string) ([]models.Peer, error) {
+	query := `SELECT public_key, ipv4_address, endpoint FROM nodes WHERE network_id = ? AND id != ?`
+	rows, err := r.db.Query(query, networkID, excludeNodeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var peers []models.Peer
+	for rows.Next() {
+		var p models.Peer
+		if err := rows.Scan(&p.PublicKey, &p.IPv4Address, &p.Endpoint); err != nil {
+			return nil, err
+		}
+		peers = append(peers, p)
+	}
+	return peers, nil
 }
 
 func (r *SQLiteRepository) DeleteNode(id string) error {
@@ -149,6 +201,30 @@ func (r *SQLiteRepository) ConsumeToken(token string) error {
 
 func (r *SQLiteRepository) CreateEnrollmentToken(t *models.EnrollmentToken) error {
 	_, err := r.db.Exec(`INSERT INTO enrollment_tokens (token, network_id) VALUES (?, ?)`, t.Token, t.NetworkID)
+	return err
+}
+
+func (r *SQLiteRepository) ListEnrollmentTokens() ([]models.EnrollmentToken, error) {
+	query := `SELECT token, network_id, used, created_at FROM enrollment_tokens ORDER BY created_at DESC`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tokens []models.EnrollmentToken
+	for rows.Next() {
+		var t models.EnrollmentToken
+		if err := rows.Scan(&t.Token, &t.NetworkID, &t.Used, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, t)
+	}
+	return tokens, nil
+}
+
+func (r *SQLiteRepository) DeleteEnrollmentToken(token string) error {
+	_, err := r.db.Exec(`DELETE FROM enrollment_tokens WHERE token = ?`, token)
 	return err
 }
 

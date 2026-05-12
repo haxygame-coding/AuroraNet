@@ -7,19 +7,37 @@ import (
 func (a *API) SetupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 
+	// Auth (Public)
+	mux.HandleFunc("POST /api/login", a.Login)
+	mux.HandleFunc("POST /api/logout", a.Logout)
+
+	// Protected Routes
+	protected := http.NewServeMux()
+
 	// Networks
-	mux.HandleFunc("GET /api/networks", a.ListNetworks)
-	mux.HandleFunc("POST /api/networks", a.CreateNetwork)
-	mux.HandleFunc("GET /api/networks/{id}", a.GetNetwork)
-	mux.HandleFunc("DELETE /api/networks/{id}", a.DeleteNetwork)
+	protected.HandleFunc("GET /api/networks", a.ListNetworks)
+	protected.HandleFunc("POST /api/networks", a.CreateNetwork)
+	protected.HandleFunc("GET /api/networks/{id}", a.GetNetwork)
+	protected.HandleFunc("DELETE /api/networks/{id}", a.DeleteNetwork)
 
 	// Nodes
-	mux.HandleFunc("GET /api/nodes", a.ListNodes)
-	mux.HandleFunc("POST /api/nodes", a.CreateNode)
-	mux.HandleFunc("DELETE /api/nodes/{id}", a.DeleteNode)
+	protected.HandleFunc("GET /api/nodes", a.ListNodes)
+	protected.HandleFunc("POST /api/nodes", a.CreateNode)
+	protected.HandleFunc("DELETE /api/nodes/{id}", a.DeleteNode)
 
-	// Enrollment
+	// Enrollment Tokens
+	protected.HandleFunc("GET /api/tokens", a.ListEnrollmentTokens)
+	protected.HandleFunc("POST /api/tokens", a.CreateEnrollmentToken)
+	protected.HandleFunc("DELETE /api/tokens/{token}", a.DeleteEnrollmentToken)
+
+	// Apply AuthMiddleware to protected mux
+	mux.Handle("/api/", a.AuthMiddleware(protected))
+
+	// Enrollment (Public)
 	mux.HandleFunc("POST /api/enroll", a.Enroll)
+
+	// Agent Endpoints
+	mux.Handle("GET /api/nodes/config", a.NodeAuthMiddleware(http.HandlerFunc(a.GetNodeConfig)))
 
 	return mux
 }

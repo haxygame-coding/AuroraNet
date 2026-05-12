@@ -1,0 +1,22 @@
+CONDITIONS GÉNÉRALES D'UTILISATION - AURORANET
+
+1. ACCEPTATION DES CONDITIONS
+En installant et en utilisant Auroranet, vous acceptez d'être lié par les présentes conditions. Si vous n'acceptez pas ces conditions, n'installez pas l'application.
+
+2. DESCRIPTION DU SERVICE
+Auroranet est un logiciel de réseau privé mesh basé sur le protocole WireGuard. Il est fourni "en l'état", sans garantie d'aucune sorte.
+
+3. UTILISATION AUTORISÉE
+Vous vous engagez à utiliser Auroranet uniquement à des fins légales. Toute utilisation visant à nuire à autrui ou à interrompre des services tiers est strictement interdite.
+
+4. RESPONSABILITÉ
+L'auteur d'Auroranet ne peut être tenu responsable des dommages directs ou indirects résultant de l'utilisation ou de l'impossibilité d'utiliser le logiciel, y compris mais sans s'y limiter, la perte de données ou les interruptions d'activité.
+
+5. PROTECTION DES DONNÉES
+Auroranet est conçu pour le self-hosting. Vos données de réseau transitent par vos propres serveurs. L'application ne collecte aucune donnée personnelle vers des serveurs tiers.
+
+6. LOGICIELS TIERS
+L'installateur peut installer le pilote WireGuard. L'utilisation de ce pilote est soumise à sa propre licence (GPLv2).
+
+7. MODIFICATIONS
+Nous nous réservons le droit de modifier ces conditions à tout moment. L'utilisation continue du logiciel après modification constitue votre acceptation des nouvelles conditions.

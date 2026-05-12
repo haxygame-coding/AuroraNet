@@ -16,6 +16,7 @@ type Config struct {
 	PublicKey       string `json:"public_key,omitempty"`
 	IPv4Address     string `json:"ipv4_address,omitempty"`
 	InterfaceName   string `json:"interface_name"`
+	ListenPort      int    `json:"listen_port,omitempty"`
 
 	filePath string
 }
@@ -23,6 +24,7 @@ type Config struct {
 func NewConfig(path string) *Config {
 	return &Config{
 		InterfaceName: "aura0",
+		ListenPort:    51820,
 		filePath:      path,
 	}
 }

@@ -1,8 +1,20 @@
+# Ignorer les fichiers fu site web
+aurora-net.org.conf
+web/
+website.example/
+
 # Ignorer le dossier task
-task/
+tasks/
+.github/
+docs/
 
 # Ignorer fichiers spécifiques
 GEMINI.md
 PROJECT.md
 todo.md
 lessons.md
+agent1.json
+agent2.json
+
+.gemini/
+gha-creds-*.json

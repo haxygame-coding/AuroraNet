@@ -1,79 +1,73 @@
 package api
 
 import (
+	"auroranet/agent/internal/models"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime"
-	"time"
 )
 
-type EnrollmentRequest struct {
-	Token      string     `json:"token"`
-	PublicKey  string     `json:"public_key"`
-	SystemInfo SystemInfo `json:"system_info"`
-}
-
-type SystemInfo struct {
-	Hostname string `json:"hostname"`
-	OS       string `json:"os"`
-	Arch     string `json:"arch"`
-	Version  string `json:"version"`
-}
-
-type EnrollmentResponse struct {
-	NodeID      string `json:"node_id"`
-	NodeSecret  string `json:"node_secret"`
-	IPv4Address string `json:"ipv4_address"`
-}
-
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL string
 }
 
 func NewClient(baseURL string) *Client {
-	return &Client{
-		baseURL: baseURL,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
-	}
+	return &Client{baseURL: baseURL}
 }
 
-func (c *Client) Enroll(token, publicKey, hostname string) (*EnrollmentResponse, error) {
-	reqBody := EnrollmentRequest{
+func (c *Client) Enroll(token, publicKey, hostname string) (*models.EnrollmentResponse, error) {
+	req := models.EnrollmentRequest{
 		Token:     token,
 		PublicKey: publicKey,
-		SystemInfo: SystemInfo{
+		SystemInfo: models.SystemInfo{
 			Hostname: hostname,
-			OS:       runtime.GOOS,
-			Arch:     runtime.GOARCH,
-			Version:  "0.1.0", // Placeholder version
 		},
 	}
 
-	data, err := json.Marshal(reqBody)
+	body, _ := json.Marshal(req)
+	resp, err := http.Post(fmt.Sprintf("%s/api/enroll", c.baseURL), "application/json", bytes.NewBuffer(body))
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal enrollment request: %w", err)
-	}
-
-	url := fmt.Sprintf("%s/api/enroll", c.baseURL)
-	resp, err := c.httpClient.Post(url, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return nil, fmt.Errorf("failed to send enrollment request: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("enrollment failed with status: %s", resp.Status)
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("enrollment failed with status: %d", resp.StatusCode)
 	}
 
-	var result EnrollmentResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode enrollment response: %w", err)
+	var enrollResp models.EnrollmentResponse
+	if err := json.NewDecoder(resp.Body).Decode(&enrollResp); err != nil {
+		return nil, err
 	}
 
-	return &result, nil
+	return &enrollResp, nil
+}
+
+func (c *Client) GetConfig(nodeID, nodeSecret string) (*models.NodeConfigResponse, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/nodes/config", c.baseURL), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("X-Node-ID", nodeID)
+	req.Header.Set("X-Node-Secret", nodeSecret)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("config fetch failed with status: %d", resp.StatusCode)
+	}
+
+	var configResp models.NodeConfigResponse
+	if err := json.NewDecoder(resp.Body).Decode(&configResp); err != nil {
+		return nil, err
+	}
+
+	return &configResp, nil
 }
