@@ -1,9 +1,0 @@
-{
-  "backend_url": "http://localhost:8080",
-  "node_id": "3a5257e1-d020-43a9-8bcc-5fdfa03ffb08",
-  "node_secret": "e090e1fd43e09a9061e470d765f74c75",
-  "private_key": "WNZnq7bMcWWVM6+0o/K4vKG70BkKyiNA4LGSyxZCUXc=",
-  "public_key": "zkx7lK7UtWKsis8x42STRBWHeKhJIhreSx/OCvavP2E=",
-  "ipv4_address": "10.0.0.3",
-  "interface_name": "aura1"
-}
