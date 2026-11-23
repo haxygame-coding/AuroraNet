@@ -1,0 +1,89 @@
+name: AuroraNet Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build server and clients
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LDFLAGS="-s -w -X github.com/netbirdio/netbird/version.version=$VERSION"
+          mkdir -p dist/linux/amd64 dist/auroranet-windows-amd64 dist/release
+          CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/auroranet-linux-amd64 ./client
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LDFLAGS" -o dist/auroranet-windows-amd64/auroranet.exe ./client
+          CGO_ENABLED=1 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-server ./combined
+
+      - name: Build Debian package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          sed -e "s|\${AURORANET_VERSION}|$VERSION|" \
+              -e "s|\${AURORANET_BINARY}|$PWD/dist/auroranet-linux-amd64|" \
+              packaging/nfpm.yaml > dist/nfpm-resolved.yaml
+          "$(go env GOPATH)/bin/nfpm" package --config dist/nfpm-resolved.yaml \
+            --packager deb --target "dist/release/auroranet_${VERSION}_amd64.deb"
+
+      - name: Build Arch package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp dist/auroranet-linux-amd64 LICENSE packaging/arch/
+          cp packaging/README.md packaging/arch/README.md
+          docker run --rm -v "$PWD:/src" -w /src/packaging/arch archlinux:latest bash -lc "
+            sed -i 's|^pkgver=.*|pkgver=${VERSION}|' PKGBUILD &&
+            pacman -Sy --noconfirm --quiet base-devel >/dev/null &&
+            useradd -m builder && chown -R builder:builder /src/packaging/arch &&
+            su builder -c 'makepkg --nodeps --noconfirm'"
+          cp packaging/arch/*.pkg.tar.zst dist/release/
+
+      - name: Build Windows MSI
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o /tmp/wintun.zip
+          unzip -j -o /tmp/wintun.zip '*/bin/amd64/wintun.dll' -d dist/auroranet-windows-amd64 >/dev/null
+          sed "s|@VERSION@|$VERSION|" client/auroranet.wxs > dist/auroranet-msi.wxs
+          docker run --rm -v "$PWD:/src" -v "$PWD/dist/auroranet-msi.wxs:/tmp/auroranet.wxs:ro" \
+            -w /src archlinux:latest bash -lc "
+              pacman -Sy --noconfirm --quiet msitools >/dev/null &&
+              wixl -o dist/release/auroranet_${VERSION}_windows_amd64.msi /tmp/auroranet.wxs"
+
+      - name: Build and push images
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -f combined/Dockerfile --build-arg TARGETPLATFORM=linux/amd64 \
+            -t "ghcr.io/haxygame/auroranet-server:${VERSION}" -t ghcr.io/haxygame/auroranet-server:latest dist
+          docker push "ghcr.io/haxygame/auroranet-server:${VERSION}"
+          docker push ghcr.io/haxygame/auroranet-server:latest
+
+      - name: Checksums and signature
+        run: |
+          cd dist/release
+          sha256sum *.deb *.pkg.tar.zst *.msi > SHA256SUMS
+          if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]]; then
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+            gpg --batch --yes --armor --detach-sign SHA256SUMS
+            for f in *.deb *.pkg.tar.zst *.msi; do gpg --batch --yes --armor --detach-sign "$f"; done
+          fi
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/release/*
+          generate_release_notes: true

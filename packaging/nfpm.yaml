@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/schema.json
+name: auroranet
+arch: amd64
+platform: linux
+version: ${AURORANET_VERSION}
+section: net
+priority: optional
+maintainer: AuroraNet <dev@aurora-net.org>
+description: |
+  AuroraNet client. Connects the host to an AuroraNet network and runs it as a
+  systemd service (auroranet.service).
+vendor: AuroraNet
+homepage: https://aurora-net.org
+license: BSD-3-Clause
+provides:
+  - auroranet
+conflicts:
+  - auroranet-static
+contents:
+  - src: ${AURORANET_BINARY}
+    dst: /usr/bin/auroranet
+    file_info:
+      mode: 0755
+  - src: LICENSE
+    dst: /usr/share/doc/auroranet/copyright
+    type: license
+  - src: packaging/README.md
+    dst: /usr/share/doc/auroranet/README.md
+    type: doc
+scripts:
+  postinstall: release_files/post_install.sh
+  preremove: release_files/pre_remove.sh

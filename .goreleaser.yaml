@@ -1,0 +1,884 @@
+version: 2
+env:
+  - SKIP_PUBLISH={{ if index .Env "SKIP_PUBLISH" }}{{ .Env.SKIP_PUBLISH }}{{ else }}true{{ end }}
+  - SKIP_LATEST={{ if index .Env "SKIP_LATEST" }}{{ .Env.SKIP_LATEST }}{{ else }}true{{ end }}
+  - SKIP_DOCKER_PUSH={{ if index .Env "SKIP_DOCKER_PUSH" }}{{ .Env.SKIP_DOCKER_PUSH }}{{ else }}false{{ end }}
+project_name: auroranet
+builds:
+  - id: auroranet-wasm
+    dir: client/wasm/cmd
+    binary: auroranet
+    env: [GOOS=js, GOARCH=wasm, CGO_ENABLED=0]
+    goos:
+      - js
+    goarch:
+      - wasm
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet
+    dir: client
+    binary: auroranet
+    env: [CGO_ENABLED=0]
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - arm
+      - amd64
+      - arm64
+      - 386
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: 386
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+
+  # deb and rpm packages target glibc distributions, so on amd64 and arm64, the only
+  # architectures with a PKCS#11 driver, they carry the PKCS#11 store, which links libc.
+  # Tarballs, the Alpine-based images and the other architectures keep the static build.
+  - id: auroranet-pkcs11
+    dir: client
+    binary: auroranet
+    env: [CGO_ENABLED=0]
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+      - pkcs11
+
+  # The 32-bit deb architectures, which have no PKCS#11 driver.
+  - id: auroranet-deb-32bit
+    dir: client
+    binary: auroranet
+    env: [CGO_ENABLED=0]
+    goos:
+      - linux
+    goarch:
+      - arm
+      - 386
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+
+  # Single-arch builds: nfpm provides is not templated, so the RPM splits per arch. The
+  # ones with a PKCS#11 driver carry the store like the deb build above.
+  - &auroranet_rpm_build
+    id: auroranet-rpm-amd64
+    dir: client
+    binary: auroranet
+    env: [CGO_ENABLED=0]
+    goos: [linux]
+    goarch: [amd64]
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+      - pkcs11
+
+  - <<: *auroranet_rpm_build
+    id: auroranet-rpm-arm64
+    goarch: [arm64]
+
+  - <<: *auroranet_rpm_build
+    id: auroranet-rpm-arm
+    goarch: [arm]
+    tags:
+      - load_wgnt_from_rsrc
+
+  - <<: *auroranet_rpm_build
+    id: auroranet-rpm-386
+    goarch: [386]
+    tags:
+      - load_wgnt_from_rsrc
+
+  - id: auroranet-static
+    dir: client
+    binary: auroranet
+    env: [CGO_ENABLED=0]
+    goos:
+      - linux
+    goarch:
+      - mips
+      - mipsle
+      - mips64
+      - mips64le
+    gomips:
+      - hardfloat
+      - softfloat
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+
+  - id: auroranet-mgmt
+    dir: management
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Runtime.Goos "linux" }}
+          {{- if eq .Arch "arm64"}}CC=aarch64-linux-gnu-gcc{{- end }}
+          {{- if eq .Arch "arm"}}CC=arm-linux-gnueabihf-gcc{{- end }}
+        {{- end }}
+    binary: auroranet-mgmt
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-signal
+    dir: signal
+    env: [CGO_ENABLED=0]
+    binary: auroranet-signal
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-relay
+    dir: relay
+    env: [CGO_ENABLED=0]
+    binary: auroranet-relay
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-server
+    dir: combined
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Runtime.Goos "linux" }}
+          {{- if eq .Arch "arm64"}}CC=aarch64-linux-gnu-gcc{{- end }}
+          {{- if eq .Arch "arm"}}CC=arm-linux-gnueabihf-gcc{{- end }}
+        {{- end }}
+    binary: auroranet-server
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-upload
+    dir: upload-server
+    env: [CGO_ENABLED=0]
+    binary: auroranet-upload
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-proxy
+    dir: proxy/cmd/proxy
+    env: [CGO_ENABLED=0]
+    binary: auroranet-proxy
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X main.Version={{.Version}} -X main.Commit={{.Commit}} -X main.BuildDate={{.CommitDate}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: nblink
+    dir: client/link/cmd/nblink
+    env: [CGO_ENABLED=0]
+    binary: nblink
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: auroranet-idp-migrate
+    dir: tools/idp-migrate
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Runtime.Goos "linux" }}
+          {{- if eq .Arch "arm64"}}CC=aarch64-linux-gnu-gcc{{- end }}
+          {{- if eq .Arch "arm"}}CC=arm-linux-gnueabihf-gcc{{- end }}
+        {{- end }}
+    binary: auroranet-idp-migrate
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - 7
+    ldflags:
+      - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+universal_binaries:
+  - id: auroranet
+
+archives:
+  - builds:
+      - auroranet
+      - auroranet-static
+  - id: auroranet-wasm
+    builds:
+      - auroranet-wasm
+    name_template: "{{ .ProjectName }}_{{ .Version }}"
+    format: binary
+  - id: auroranet-idp-migrate
+    builds:
+      - auroranet-idp-migrate
+    name_template: "auroranet-idp-migrate_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: nblink
+    builds:
+      - nblink
+    name_template: "nblink_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # goreleaser archives as tar.gz everywhere unless told otherwise, and
+    # nblink is downloaded and extracted by hand on Windows too.
+    format_overrides:
+      - goos: windows
+        format: zip
+
+nfpms:
+  - maintainer: AuroraNet <dev@aurora-net.org>
+    description: AuroraNet client.
+    homepage: https://aurora-net.org/
+    license: BSD-3-Clause
+    vendor: AuroraNet
+    id: auroranet_deb
+    bindir: /usr/bin
+    builds:
+      - auroranet-pkcs11
+      - auroranet-deb-32bit
+    formats:
+      - deb
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/auroranet/copyright
+        type: license
+      - src: README.md
+        dst: /usr/share/doc/auroranet/README.md
+        type: doc
+    scripts:
+      postinstall: "release_files/post_install.sh"
+      preremove: "release_files/pre_remove.sh"
+
+  - &auroranet_rpm
+    maintainer: AuroraNet <dev@aurora-net.org>
+    description: AuroraNet client.
+    homepage: https://aurora-net.org/
+    license: BSD-3-Clause
+    vendor: AuroraNet
+    id: auroranet_rpm_amd64
+    bindir: /usr/bin
+    ids:
+      - auroranet-rpm-amd64
+    formats:
+      - rpm
+    # Red Hat certification (RPM Version Handling) requires rpmbuild's ISA
+    # provide, which nfpm does not emit. The version is filled in by the release job.
+    provides:
+      - "auroranet(x86-64) = @RPM_EVR@"
+    # The client verifies TLS to management and signal against the system trust
+    # store. Red Hat software certification (RPM Dependency Tracking) also
+    # rejects packages that declare no dependencies at all.
+    dependencies:
+      - ca-certificates
+    # Generated in CI by chglog from git tags; Red Hat certification requires an
+    # RPM changelog (RPM Version Handling subtest).
+    changelog: changelog.yml
+    # License, documentation and a config file so the RPM Provenance subtest sees
+    # %license, %doc and %config entries instead of a bare binary.
+    contents:
+      - src: LICENSE
+        dst: /usr/share/licenses/auroranet/LICENSE
+        type: license
+      - src: README.md
+        dst: /usr/share/doc/auroranet/README.md
+        type: doc
+      - src: release_files/auroranet.sysconfig
+        dst: /etc/sysconfig/auroranet
+        type: config|noreplace
+        # May hold the PKCS#11 token PIN (NB_TPM_PIN), so readable by root alone.
+        file_info:
+          mode: 0600
+    scripts:
+      postinstall: "release_files/post_install.sh"
+      preremove: "release_files/pre_remove.sh"
+    rpm:
+      summary: AuroraNet client
+      group: Applications/Internet
+      packager: AuroraNet <dev@aurora-net.org>
+      signature:
+        key_file: '{{ if index .Env "GPG_RPM_KEY_FILE" }}{{ .Env.GPG_RPM_KEY_FILE }}{{ end }}'
+
+  - <<: *auroranet_rpm
+    id: auroranet_rpm_arm64
+    ids:
+      - auroranet-rpm-arm64
+    provides:
+      - "auroranet(aarch-64) = @RPM_EVR@"
+
+  - <<: *auroranet_rpm
+    id: auroranet_rpm_arm
+    ids:
+      - auroranet-rpm-arm
+    provides:
+      - "auroranet(armv6hl-32) = @RPM_EVR@"
+
+  - <<: *auroranet_rpm
+    id: auroranet_rpm_386
+    ids:
+      - auroranet-rpm-386
+    provides:
+      - "auroranet(x86-32) = @RPM_EVR@"
+dockers_v2:
+   - id: auroranet
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet
+     images:
+       - haxygame/auroranet
+       - ghcr.io/haxygame/auroranet
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: client/Dockerfile
+     extra_files:
+       - client/auroranet-entrypoint.sh
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm/6
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: auroranet-rootless
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet
+     images:
+       - haxygame/auroranet
+       - ghcr.io/haxygame/auroranet
+     tags:
+       - "{{ .Version }}-rootless"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}rootless-latest{{ end }}"
+     dockerfile: client/Dockerfile-rootless
+     extra_files:
+       - client/auroranet-entrypoint.sh
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm/6
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: auroranet-rootless-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet
+     images:
+       - haxygame/auroranet
+       - ghcr.io/haxygame/auroranet
+     tags:
+       - "{{ .Version }}-rootless-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}rootless-ubi-latest{{ end }}"
+     dockerfile: client/Dockerfile-rootless.ubi
+     extra_files:
+       - client/auroranet-entrypoint.sh
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -t load_wgnt_from_rsrc "{{ .ContextDir }}/licenses" ./client amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=0
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: relay
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-relay
+     images:
+       - haxygame/relay
+       - ghcr.io/haxygame/relay
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: relay/Dockerfile
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: relay-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-relay
+     images:
+       - haxygame/relay
+       - ghcr.io/haxygame/relay
+     tags:
+       - "{{ .Version }}-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
+     dockerfile: relay/Dockerfile.ubi
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -l relay/LICENSE "{{ .ContextDir }}/licenses" ./relay amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=0
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: signal
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-signal
+     images:
+       - haxygame/signal
+       - ghcr.io/haxygame/signal
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: signal/Dockerfile
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: signal-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-signal
+     images:
+       - haxygame/signal
+       - ghcr.io/haxygame/signal
+     tags:
+       - "{{ .Version }}-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
+     dockerfile: signal/Dockerfile.ubi
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -l signal/LICENSE "{{ .ContextDir }}/licenses" ./signal amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=0
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: management
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-mgmt
+     images:
+       - haxygame/management
+       - ghcr.io/haxygame/management
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: management/Dockerfile
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: management-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-mgmt
+     images:
+       - haxygame/management
+       - ghcr.io/haxygame/management
+     tags:
+       - "{{ .Version }}-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
+     dockerfile: management/Dockerfile.ubi
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -l management/LICENSE "{{ .ContextDir }}/licenses" ./management amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=1
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: upload
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-upload
+     images:
+       - haxygame/upload
+       - ghcr.io/haxygame/upload
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: upload-server/Dockerfile.release
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: auroranet-server
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-server
+     images:
+       - ghcr.io/haxygame/auroranet-server
+       - ghcr.io/haxygame/auroranet-server
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: combined/Dockerfile
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: auroranet-server-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-server
+     images:
+       - ghcr.io/haxygame/auroranet-server
+       - ghcr.io/haxygame/auroranet-server
+     tags:
+       - "{{ .Version }}-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
+     dockerfile: combined/Dockerfile.ubi
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -l combined/LICENSE "{{ .ContextDir }}/licenses" ./combined amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=1
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: auroranet-proxy
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-proxy
+     images:
+       - ghcr.io/haxygame/auroranet-proxy
+       - ghcr.io/haxygame/auroranet-proxy
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: proxy/Dockerfile
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: nblink
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - nblink
+     images:
+       - haxygame/nblink
+       - ghcr.io/haxygame/nblink
+     tags:
+       - "{{ .Version }}"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
+     dockerfile: client/Dockerfile-nblink
+     platforms:
+       - linux/amd64
+       - linux/arm64
+       - linux/arm
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "nblink"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+   - id: proxy-ubi
+     disable: "{{ .Env.SKIP_DOCKER_PUSH }}"
+     ids:
+       - auroranet-proxy
+     images:
+       - ghcr.io/haxygame/auroranet-proxy
+       - ghcr.io/haxygame/auroranet-proxy
+     tags:
+       - "{{ .Version }}-ubi"
+       - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
+     dockerfile: proxy/Dockerfile.ubi
+     platforms:
+       - linux/amd64
+       - linux/arm64
+     build_args:
+       VERSION: "{{ .Version }}"
+       RELEASE: "{{ .Timestamp }}"
+     hooks:
+       pre:
+         - cmd: 'sh release_files/collect-licenses.sh -l proxy/LICENSE -w "{{ .ContextDir }}/licenses" ./proxy/cmd/proxy amd64 arm64'
+           env:
+             - GOOS=linux
+             - CGO_ENABLED=0
+     labels:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+     annotations:
+       "org.opencontainers.image.created": "{{.Date}}"
+       "org.opencontainers.image.title": "{{.ProjectName}}"
+       "org.opencontainers.image.version": "{{.Version}}"
+       "org.opencontainers.image.revision": "{{.FullCommit}}"
+       "org.opencontainers.image.source": "{{.GitURL}}"
+       "maintainer": "dev@aurora-net.org"
+
+brews:
+  - ids:
+      - default
+    # The tap holds one version, so a patch on an older line must not overwrite it.
+    skip_upload: "{{ .Env.SKIP_LATEST }}"
+    repository:
+      owner: haxygame
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: AuroraNet
+      email: dev@aurora-net.org
+    description: AuroraNet project.
+    download_strategy: CurlDownloadStrategy
+    homepage: https://aurora-net.org/
+    license: "BSD3"
+    install: |
+      bin.install "auroranet"
+      bin.install_symlink "auroranet" => "auroranet"
+    test: |
+      system "#{bin}/{{ .ProjectName	}} version"
+
+uploads:
+  - name: debian
+    skip: "{{ .Env.SKIP_PUBLISH }}"
+    ids:
+      - auroranet_deb
+    mode: archive
+    target: https://pkgs.wiretrustee.com/debian/pool/{{ .ArtifactName }};deb.distribution=stable;deb.component=main;deb.architecture={{ if .Arm }}armhf{{ else }}{{ .Arch }}{{ end }};deb.package=
+    username: dev@wiretrustee.com
+    method: PUT
+
+  - name: yum
+    skip: "{{ .Env.SKIP_PUBLISH }}"
+    ids:
+      - auroranet_rpm_amd64
+      - auroranet_rpm_arm64
+      - auroranet_rpm_arm
+      - auroranet_rpm_386
+    mode: archive
+    target: https://pkgs.wiretrustee.com/yum/{{ .Arch }}{{ if .Arm }}{{ .Arm }}{{ end }}
+    username: dev@wiretrustee.com
+    method: PUT
+
+checksum:
+  extra_files:
+    - glob: ./infrastructure_files/getting-started-with-zitadel.sh
+    - glob: ./release_files/install.sh
+    - glob: ./infrastructure_files/getting-started.sh
+    - glob: ./infrastructure_files/getting-started-enterprise.sh
+    - glob: ./infrastructure_files/migrate-to-enterprise.sh
+
+release:
+  # The signing pipeline (haxygame/sign-pipelines, dispatched by
+  # trigger_signer) marks the release latest once the Windows and macOS
+  # artifacts are signed. Without this override goreleaser marks it latest
+  # at publish time, while those artifacts are still unsigned.
+  make_latest: false
+  # Mark x.y.z-rc.* and other prerelease tags as prereleases on GitHub.
+  prerelease: auto
+  extra_files:
+    - glob: ./infrastructure_files/getting-started-with-zitadel.sh
+    - glob: ./release_files/install.sh
+    - glob: ./infrastructure_files/getting-started.sh
+    - glob: ./infrastructure_files/getting-started-enterprise.sh
+    - glob: ./infrastructure_files/migrate-to-enterprise.sh

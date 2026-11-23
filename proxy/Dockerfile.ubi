@@ -1,0 +1,32 @@
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:2d4c4551af6831dcd26bbf86108c4385de5183ec8fe6b5868f6f9640fe47f4ed
+
+ARG TARGETPLATFORM
+ARG VERSION=dev
+ARG RELEASE=1
+
+LABEL name="auroranet-reverse-proxy" \
+      maintainer="AuroraNet <dev@aurora-net.org>" \
+      vendor="AuroraNet" \
+      version="${VERSION}" \
+      release="${RELEASE}" \
+      summary="AuroraNet Reverse Proxy" \
+      description="AuroraNet Reverse Proxy provides an identity-aware entrypoint to services in AuroraNet networks."
+
+COPY --chmod=0555 ${TARGETPLATFORM}/auroranet-proxy /go/bin/auroranet-proxy
+COPY licenses/ /licenses/
+# Only the writable directories share the root group for arbitrary non-root UIDs.
+# Runtime-created private keys retain the application's restrictive file modes.
+RUN mkdir -p /var/lib/auroranet /certs && \
+    chown 1000:0 /var/lib/auroranet /certs && \
+    chmod 0770 /var/lib/auroranet /certs && \
+    chmod -R a+rX /licenses
+
+USER 1000:0
+ENV HOME=/var/lib/auroranet
+ENV NB_PROXY_ADDRESS=":8443"
+# Unprivileged ports: runtimes such as OpenShift and Podman keep the kernel
+# default that reserves ports below 1024 for root. 8080 is the health probe.
+ENV NB_PROXY_ACME_ADDRESS=":8081"
+EXPOSE 8443
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/go/bin/auroranet-proxy"]

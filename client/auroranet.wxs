@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Built with msitools wixl (WiX 3 schema) so the MSI can be produced on
+     Linux. @VERSION@ is replaced by packaging/build-release.sh. -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="AuroraNet"
+           Language="1033"
+           Version="@VERSION@"
+           Manufacturer="AuroraNet"
+           UpgradeCode="6456ec4e-3ad6-4b9b-a2be-98e81cb21ccf">
+
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="AuroraNet">
+          <Component Id="AuroraNetFiles" Guid="db3165de-cc6e-4922-8396-9d892950e23e" Win64="yes">
+            <File Id="auroranet.exe" Source="dist/auroranet-windows-amd64/auroranet.exe" KeyPath="yes" />
+            <File Id="wintun.dll" Source="dist/auroranet-windows-amd64/wintun.dll" />
+
+            <ServiceInstall Id="AuroraNetService"
+                            Name="AuroraNet"
+                            DisplayName="AuroraNet"
+                            Description="Connect your devices into a secure WireGuard-based overlay network with SSO, MFA and granular access controls."
+                            Start="auto"
+                            Type="ownProcess"
+                            ErrorControl="normal"
+                            Account="LocalSystem"
+                            Arguments="service run config [CommonAppDataFolder]AuroraNet\config.json log-level info" />
+            <ServiceControl Id="AuroraNetServiceCtl" Name="AuroraNet" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="AuroraNetFeature" Title="AuroraNet" Level="1">
+      <ComponentRef Id="AuroraNetFiles" />
+    </Feature>
+
+    <Icon Id="AuroraNetIcon" SourceFile="client/ui/build/windows/icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AuroraNetIcon" />
+  </Product>
+</Wix>

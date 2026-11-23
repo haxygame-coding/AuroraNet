@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=AuroraNet
+Comment=AuroraNet desktop client
+Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 /usr/bin/auroranet-ui
+Icon=auroranet
+Type=Application
+Terminal=false
+Categories=Utility;
+Keywords=auroranet;
+StartupWMClass=org.wails.auroranet

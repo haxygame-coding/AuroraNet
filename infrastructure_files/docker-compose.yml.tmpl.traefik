@@ -1,0 +1,118 @@
+x-default: &default
+  restart: 'unless-stopped'
+  logging:
+    driver: 'json-file'
+    options:
+      max-size: '500m'
+      max-file: '2'
+
+services:
+  # UI dashboard
+  dashboard:
+    <<: *default
+    image: ghcr.io/haxygame/auroranet-dashboard:$AURORANET_DASHBOARD_TAG
+    environment:
+      # Endpoints
+      - AURORANET_MGMT_API_ENDPOINT=$AURORANET_MGMT_API_ENDPOINT
+      - AURORANET_MGMT_GRPC_API_ENDPOINT=$AURORANET_MGMT_API_ENDPOINT
+      # OIDC
+      - AUTH_AUDIENCE=$AURORANET_DASH_AUTH_AUDIENCE
+      - AUTH_CLIENT_ID=$AURORANET_AUTH_CLIENT_ID
+      - AUTH_CLIENT_SECRET=$AURORANET_AUTH_CLIENT_SECRET
+      - AUTH_AUTHORITY=$AURORANET_AUTH_AUTHORITY
+      - USE_AUTH0=$AURORANET_USE_AUTH0
+      - AUTH_SUPPORTED_SCOPES=$AURORANET_AUTH_SUPPORTED_SCOPES
+      - AUTH_REDIRECT_URI=$AURORANET_AUTH_REDIRECT_URI
+      - AUTH_SILENT_REDIRECT_URI=$AURORANET_AUTH_SILENT_REDIRECT_URI
+      - AURORANET_TOKEN_SOURCE=$AURORANET_TOKEN_SOURCE
+      # SSL
+      - NGINX_SSL_PORT=443
+      # Letsencrypt
+      - LETSENCRYPT_DOMAIN=$AURORANET_LETSENCRYPT_DOMAIN
+      - LETSENCRYPT_EMAIL=$AURORANET_LETSENCRYPT_EMAIL
+    volumes:
+      - $LETSENCRYPT_VOLUMENAME:/etc/letsencrypt/
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.auroranet-dashboard.rule=Host(`$AURORANET_DOMAIN`)
+    - traefik.http.services.auroranet-dashboard.loadbalancer.server.port=80
+
+  # Signal
+  signal:
+    <<: *default
+    image: haxygame/signal:$AURORANET_SIGNAL_TAG
+    volumes:
+      - $SIGNAL_VOLUMENAME:/var/lib/auroranet
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.auroranet-wsproxy-signal.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/ws-proxy/signal`)
+    - traefik.http.routers.auroranet-wsproxy-signal.service=auroranet-wsproxy-signal
+    - traefik.http.services.auroranet-wsproxy-signal.loadbalancer.server.port=80
+    - traefik.http.routers.auroranet-signal.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/signalexchange.SignalExchange/`)
+    - traefik.http.routers.auroranet-signal.service=auroranet-signal
+    - traefik.http.services.auroranet-signal.loadbalancer.server.port=10000
+    - traefik.http.services.auroranet-signal.loadbalancer.server.scheme=h2c
+
+  # Relay
+  relay:
+    <<: *default
+    image: haxygame/relay:$AURORANET_RELAY_TAG
+    environment:
+    - NB_LOG_LEVEL=info
+    - NB_LISTEN_ADDRESS=:33080
+    - NB_EXPOSED_ADDRESS=$AURORANET_RELAY_ENDPOINT
+    # todo: change to a secure secret
+    - NB_AUTH_SECRET=$AURORANET_RELAY_AUTH_SECRET
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.auroranet-relay.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/relay`)
+    - traefik.http.services.auroranet-relay.loadbalancer.server.port=33080
+
+  # Management
+  management:
+    <<: *default
+    image: haxygame/management:$AURORANET_MANAGEMENT_TAG
+    depends_on:
+      - dashboard
+    volumes:
+      - $MGMT_VOLUMENAME:/var/lib/auroranet
+      - $LETSENCRYPT_VOLUMENAME:/etc/letsencrypt:ro
+      - ./management.json:/etc/auroranet/management.json
+    command: [
+      "--port", "33073",
+      "--log-file", "console",
+      "--log-level", "info",
+      "--disable-anonymous-metrics=$AURORANET_DISABLE_ANONYMOUS_METRICS",
+      "--single-account-mode-domain=$AURORANET_MGMT_SINGLE_ACCOUNT_MODE_DOMAIN",
+      "--dns-domain=$AURORANET_MGMT_DNS_DOMAIN"
+      ]
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.auroranet-api.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/api`)
+    - traefik.http.routers.auroranet-api.service=auroranet-api
+    - traefik.http.services.auroranet-api.loadbalancer.server.port=33073
+    - traefik.http.routers.auroranet-wsproxy-mgmt.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/ws-proxy/management`)
+    - traefik.http.routers.auroranet-wsproxy-mgmt.service=auroranet-wsproxy-mgmt
+    - traefik.http.services.auroranet-wsproxy-mgmt.loadbalancer.server.port=33073
+    - traefik.http.routers.auroranet-management.rule=Host(`$AURORANET_DOMAIN`) && PathPrefix(`/management.ManagementService/`)
+    - traefik.http.routers.auroranet-management.service=auroranet-management
+    - traefik.http.services.auroranet-management.loadbalancer.server.port=33073
+    - traefik.http.services.auroranet-management.loadbalancer.server.scheme=h2c
+    environment:
+      - AURORANET_STORE_ENGINE_POSTGRES_DSN=$AURORANET_STORE_ENGINE_POSTGRES_DSN
+      
+  # Coturn
+  coturn:
+    <<: *default
+    image: coturn/coturn:$COTURN_TAG
+    domainname: $TURN_DOMAIN
+    volumes:
+      - ./turnserver.conf:/etc/turnserver.conf:ro
+    network_mode: host
+    command:
+      - -c /etc/turnserver.conf
+
+volumes:
+  $MGMT_VOLUMENAME:
+  $SIGNAL_VOLUMENAME:
+  $LETSENCRYPT_VOLUMENAME:

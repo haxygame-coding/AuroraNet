@@ -1,0 +1,87 @@
+package server
+
+import (
+	"fmt"
+	"reflect"
+)
+
+// Create a dependency and add it to the BaseServer's container. A string key identifier will be based on its type definition.
+func Create[T any](s Server, createFunc func() T) T {
+	result, _ := maybeCreate(s, createFunc)
+
+	return result
+}
+
+// CreateNamed is the same as Create but will suffix the dependency string key identifier with a custom name.
+// Useful if you want to have multiple named instances of the same object type.
+func CreateNamed[T any](s Server, name string, createFunc func() T) T {
+	result, _ := maybeCreateNamed(s, name, createFunc)
+
+	return result
+}
+
+// Inject lets you override a specific service from outside the BaseServer itself.
+// This is useful for tests
+func Inject[T any](c Server, thing T) {
+	_, _ = maybeCreate(c, func() T {
+		return thing
+	})
+}
+
+// InjectNamed is like Inject() but with a custom name.
+func InjectNamed[T any](c Server, name string, thing T) {
+	_, _ = maybeCreateKeyed(c, name, func() T {
+		return thing
+	})
+}
+
+func maybeCreate[T any](s Server, createFunc func() T) (result T, isNew bool) {
+	return maybeCreateKeyed(s, typeKey(reflect.TypeFor[T]()), createFunc)
+}
+
+func maybeCreateNamed[T any](s Server, name string, createFunc func() T) (result T, isNew bool) {
+	key := fmt.Sprintf("%s:%s", typeKey(reflect.TypeFor[T]()), name)
+	return maybeCreateKeyed(s, key, createFunc)
+}
+
+// typeKey names t by the full package path of every named type it is built from, so
+// same-named types of different packages, such as google.golang.org/grpc.Server and a
+// local grpc.Server, never share a container key.
+func typeKey(t reflect.Type) string {
+	if t.Name() != "" {
+		if t.PkgPath() == "" {
+			return t.Name()
+		}
+		return t.PkgPath() + "." + t.Name()
+	}
+
+	switch t.Kind() {
+	case reflect.Pointer:
+		return "*" + typeKey(t.Elem())
+	case reflect.Slice:
+		return "[]" + typeKey(t.Elem())
+	case reflect.Array:
+		return fmt.Sprintf("[%d]%s", t.Len(), typeKey(t.Elem()))
+	case reflect.Map:
+		return "map[" + typeKey(t.Key()) + "]" + typeKey(t.Elem())
+	case reflect.Chan:
+		return t.ChanDir().String() + " " + typeKey(t.Elem())
+	default:
+		return t.String()
+	}
+}
+
+func maybeCreateKeyed[T any](s Server, key string, createFunc func() T) (result T, isNew bool) {
+	if t, ok := s.GetContainer(key); ok {
+		if t == nil {
+			return result, false
+		}
+		return t.(T), false
+	}
+
+	t := createFunc()
+
+	s.SetContainer(key, t)
+
+	return t, true
+}

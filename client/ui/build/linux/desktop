@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=AuroraNet
+Comment=AuroraNet desktop client
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/auroranet-ui %u
+Terminal=false
+Type=Application
+Icon=auroranet-ui
+Categories=Utility;
+StartupWMClass=auroranet-ui
+
+ 

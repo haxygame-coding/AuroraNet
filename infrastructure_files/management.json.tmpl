@@ -1,0 +1,101 @@
+{
+    "Stuns": [
+        {
+            "Proto": "udp",
+            "URI": "stun:$TURN_DOMAIN:3478",
+            "Username": "",
+            "Password": null
+        }
+    ],
+    "TURNConfig": {
+        "Turns": [
+            {
+                "Proto": "udp",
+                "URI": "turn:$TURN_DOMAIN:3478",
+                "Username": "$TURN_USER",
+                "Password": "$TURN_PASSWORD"
+            }
+        ],
+        "CredentialsTTL": "12h",
+        "Secret": "secret",
+        "TimeBasedCredentials": false
+    },
+    "Relay": {
+        "Addresses": ["$AURORANET_RELAY_ENDPOINT"],
+        "CredentialsTTL": "24h",
+        "Secret": "$AURORANET_RELAY_AUTH_SECRET"
+    },
+    "Signal": {
+        "Proto": "$AURORANET_SIGNAL_PROTOCOL",
+        "URI": "$AURORANET_DOMAIN:$AURORANET_SIGNAL_PORT",
+        "Username": "",
+        "Password": null
+    },
+    "ReverseProxy": {
+        "TrustedHTTPProxies": [],
+        "TrustedHTTPProxiesCount": 0,
+        "TrustedPeers": []
+    },
+    "DisableDefaultPolicy": $AURORANET_MGMT_DISABLE_DEFAULT_POLICY,
+    "Datadir": "",
+    "DataStoreEncryptionKey": "$AURORANET_DATASTORE_ENC_KEY",
+    "StoreConfig": {
+        "Engine": "$AURORANET_STORE_CONFIG_ENGINE"
+    },
+    "HttpConfig": {
+        "Address": "0.0.0.0:$AURORANET_MGMT_API_PORT",
+        "AuthIssuer": "$AURORANET_AUTH_AUTHORITY",
+        "AuthAudience": "$AURORANET_AUTH_AUDIENCE",
+        "AuthKeysLocation": "$AURORANET_AUTH_JWT_CERTS",
+        "AuthUserIDClaim": "$AURORANET_AUTH_USER_ID_CLAIM",
+        "CertFile":"$AURORANET_MGMT_API_CERT_FILE",
+        "CertKey":"$AURORANET_MGMT_API_CERT_KEY_FILE",
+        "IdpSignKeyRefreshEnabled": $AURORANET_MGMT_IDP_SIGNKEY_REFRESH,
+        "OIDCConfigEndpoint":"$AURORANET_AUTH_OIDC_CONFIGURATION_ENDPOINT"
+    },
+    "IdpManagerConfig": {
+        "ManagerType": "$AURORANET_MGMT_IDP",
+        "ClientConfig": {
+            "Issuer": "$AURORANET_AUTH_AUTHORITY",
+            "TokenEndpoint": "$AURORANET_AUTH_TOKEN_ENDPOINT",
+            "ClientID": "$AURORANET_IDP_MGMT_CLIENT_ID",
+            "ClientSecret": "$AURORANET_IDP_MGMT_CLIENT_SECRET",
+            "GrantType": "client_credentials"
+        },
+        "ExtraConfig": $AURORANET_IDP_MGMT_EXTRA_CONFIG,
+        "Auth0ClientCredentials": null,
+        "AzureClientCredentials": null,
+        "KeycloakClientCredentials": null,
+        "ZitadelClientCredentials": null
+     },
+    "DeviceAuthorizationFlow": {
+        "Provider": "$AURORANET_AUTH_DEVICE_AUTH_PROVIDER",
+        "ProviderConfig": {
+          "Audience": "$AURORANET_AUTH_DEVICE_AUTH_AUDIENCE",
+          "AuthorizationEndpoint": "",
+          "Domain": "$AURORANET_AUTH0_DOMAIN",
+          "ClientID": "$AURORANET_AUTH_DEVICE_AUTH_CLIENT_ID",
+          "ClientSecret": "",
+          "TokenEndpoint": "$AURORANET_AUTH_TOKEN_ENDPOINT",
+          "DeviceAuthEndpoint": "$AURORANET_AUTH_DEVICE_AUTH_ENDPOINT",
+          "Scope": "$AURORANET_AUTH_DEVICE_AUTH_SCOPE",
+          "UseIDToken": $AURORANET_AUTH_DEVICE_AUTH_USE_ID_TOKEN,
+          "RedirectURLs": null
+         }
+    },
+    "PKCEAuthorizationFlow": {
+        "ProviderConfig": {
+            "Audience": "$AURORANET_AUTH_PKCE_AUDIENCE",
+            "ClientID": "$AURORANET_AUTH_CLIENT_ID",
+            "ClientSecret": "$AURORANET_AUTH_CLIENT_SECRET",
+            "Domain": "",
+            "AuthorizationEndpoint": "$AURORANET_AUTH_PKCE_AUTHORIZATION_ENDPOINT",
+            "TokenEndpoint": "$AURORANET_AUTH_TOKEN_ENDPOINT",
+            "Scope": "$AURORANET_AUTH_SUPPORTED_SCOPES",
+            "RedirectURLs": [$AURORANET_AUTH_PKCE_REDIRECT_URLS],
+            "UseIDToken": $AURORANET_AUTH_PKCE_USE_ID_TOKEN,
+            "DisablePromptLogin": $AURORANET_AUTH_PKCE_DISABLE_PROMPT_LOGIN,
+            "LoginFlag": $AURORANET_AUTH_PKCE_LOGIN_FLAG
+        }
+    }
+}

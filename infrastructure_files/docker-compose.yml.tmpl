@@ -1,0 +1,114 @@
+x-default: &default
+  restart: 'unless-stopped'
+  logging:
+    driver: 'json-file'
+    options:
+      max-size: '500m'
+      max-file: '2'
+
+services:
+  # UI dashboard
+  dashboard:
+    <<: *default
+    image: ghcr.io/haxygame/auroranet-dashboard:$AURORANET_DASHBOARD_TAG
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      # Endpoints
+      - AURORANET_MGMT_API_ENDPOINT=$AURORANET_MGMT_API_ENDPOINT
+      - AURORANET_MGMT_GRPC_API_ENDPOINT=$AURORANET_MGMT_API_ENDPOINT
+      # OIDC
+      - AUTH_AUDIENCE=$AURORANET_DASH_AUTH_AUDIENCE
+      - AUTH_CLIENT_ID=$AURORANET_AUTH_CLIENT_ID
+      - AUTH_CLIENT_SECRET=$AURORANET_AUTH_CLIENT_SECRET
+      - AUTH_AUTHORITY=$AURORANET_AUTH_AUTHORITY
+      - USE_AUTH0=$AURORANET_USE_AUTH0
+      - AUTH_SUPPORTED_SCOPES=$AURORANET_AUTH_SUPPORTED_SCOPES
+      - AUTH_REDIRECT_URI=$AURORANET_AUTH_REDIRECT_URI
+      - AUTH_SILENT_REDIRECT_URI=$AURORANET_AUTH_SILENT_REDIRECT_URI
+      - AURORANET_TOKEN_SOURCE=$AURORANET_TOKEN_SOURCE
+      # SSL
+      - NGINX_SSL_PORT=443
+      # Letsencrypt
+      - LETSENCRYPT_DOMAIN=$AURORANET_LETSENCRYPT_DOMAIN
+      - LETSENCRYPT_EMAIL=$AURORANET_LETSENCRYPT_EMAIL
+    volumes:
+      - $LETSENCRYPT_VOLUMENAME:/etc/letsencrypt/
+
+  # Signal
+  signal:
+    <<: *default
+    image: haxygame/signal:$AURORANET_SIGNAL_TAG
+    depends_on:
+          - dashboard
+    volumes:
+      - $SIGNAL_VOLUMENAME:/var/lib/auroranet
+      - $LETSENCRYPT_VOLUMENAME:/etc/letsencrypt:ro
+    ports:
+      - $AURORANET_SIGNAL_PORT:80
+  #      # port and command for Let's Encrypt validation
+  #      - 443:443
+  #    command: ["--letsencrypt-domain", "$AURORANET_LETSENCRYPT_DOMAIN", "--log-file", "console"]
+    command: [
+      "--cert-file", "$AURORANET_MGMT_API_CERT_FILE",
+      "--cert-key", "$AURORANET_MGMT_API_CERT_KEY_FILE",
+      "--log-file", "console",
+      "--port", "80"
+    ]
+
+  # Relay
+  relay:
+    <<: *default
+    image: haxygame/relay:$AURORANET_RELAY_TAG
+    environment:
+    - NB_LOG_LEVEL=info
+    - NB_LISTEN_ADDRESS=:$AURORANET_RELAY_PORT
+    - NB_EXPOSED_ADDRESS=$AURORANET_RELAY_ENDPOINT
+    # todo: change to a secure secret
+    - NB_AUTH_SECRET=$AURORANET_RELAY_AUTH_SECRET
+    ports:
+      - $AURORANET_RELAY_PORT:$AURORANET_RELAY_PORT
+
+  # Management
+  management:
+    <<: *default
+    image: haxygame/management:$AURORANET_MANAGEMENT_TAG
+    depends_on:
+      - dashboard
+    volumes:
+      - $MGMT_VOLUMENAME:/var/lib/auroranet
+      - $LETSENCRYPT_VOLUMENAME:/etc/letsencrypt:ro
+      - ./management.json:/etc/auroranet/management.json
+    ports:
+      - $AURORANET_MGMT_API_PORT:443 #API port
+  #    # command for Let's Encrypt validation without dashboard container
+  #    command: ["--letsencrypt-domain", "$AURORANET_LETSENCRYPT_DOMAIN", "--log-file", "console"]
+    command: [
+      "--port", "443",
+      "--log-file", "console",
+      "--log-level", "info",
+      "--disable-anonymous-metrics=$AURORANET_DISABLE_ANONYMOUS_METRICS",
+      "--single-account-mode-domain=$AURORANET_MGMT_SINGLE_ACCOUNT_MODE_DOMAIN",
+      "--dns-domain=$AURORANET_MGMT_DNS_DOMAIN"
+      ]
+    environment:
+      - AURORANET_STORE_ENGINE_POSTGRES_DSN=$AURORANET_STORE_ENGINE_POSTGRES_DSN
+      
+  # Coturn
+  coturn:
+    <<: *default
+    image: coturn/coturn:$COTURN_TAG
+    #domainname: $TURN_DOMAIN # only needed when TLS is enabled
+    volumes:
+      - ./turnserver.conf:/etc/turnserver.conf:ro
+    #      - ./privkey.pem:/etc/coturn/private/privkey.pem:ro
+    #      - ./cert.pem:/etc/coturn/certs/cert.pem:ro
+    network_mode: host
+    command:
+      - -c /etc/turnserver.conf
+
+volumes:
+  $MGMT_VOLUMENAME:
+  $SIGNAL_VOLUMENAME:
+  $LETSENCRYPT_VOLUMENAME:

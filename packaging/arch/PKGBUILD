@@ -1,0 +1,20 @@
+# Maintainer: AuroraNet <dev@aurora-net.org>
+pkgname=auroranet
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="AuroraNet client and systemd service"
+arch=('x86_64')
+url="https://aurora-net.org"
+license=('BSD-3-Clause')
+depends=('ca-certificates')
+provides=('auroranet')
+conflicts=('auroranet-bin')
+install=auroranet.install
+source=("auroranet-linux-amd64" "LICENSE" "README.md")
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+
+package() {
+  install -Dm755 "${srcdir}/auroranet-linux-amd64" "${pkgdir}/usr/bin/auroranet"
+  install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/auroranet/LICENSE"
+  install -Dm644 "${srcdir}/README.md" "${pkgdir}/usr/share/doc/auroranet/README.md"
+}

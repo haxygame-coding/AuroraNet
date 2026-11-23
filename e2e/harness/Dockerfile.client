@@ -1,0 +1,28 @@
+# Multistage build for the AuroraNet client used in e2e tests. The repo has no
+# source-building client Dockerfile (client/Dockerfile packages a goreleaser
+# artifact), so this mirrors its alpine runtime + entrypoint while compiling the
+# CGO-free client inline. BuildKit cache mounts keep rebuilds incremental.
+
+FROM golang:1.26.10-bookworm AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/auroranet ./client
+
+FROM alpine:3.24
+RUN apk add --no-cache bash ca-certificates ip6tables iproute2 iptables
+ENV AURORANET_BIN="/usr/local/bin/auroranet" \
+    NB_LOG_FILE="console,/var/log/auroranet/client.log" \
+    NB_DAEMON_ADDR="unix:///var/run/auroranet.sock" \
+    NB_ENABLE_CAPTURE="false" \
+    NB_ENTRYPOINT_SERVICE_TIMEOUT="30"
+ENTRYPOINT [ "/usr/local/bin/auroranet-entrypoint.sh" ]
+# --chmod because the build context is not always a git checkout. A suite in
+# another module builds from this module's extracted copy in the module cache,
+# where every file is 0444 — the cache drops the executable bit git records — and
+# a bare COPY then produces an entrypoint the runtime cannot exec.
+COPY --chmod=0755 client/auroranet-entrypoint.sh /usr/local/bin/auroranet-entrypoint.sh
+COPY --from=builder /out/auroranet /usr/local/bin/auroranet

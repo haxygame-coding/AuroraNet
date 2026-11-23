@@ -1,0 +1,18 @@
+post_install() {
+  printf '\033[32m Installing the AuroraNet service\033[0m\n'
+  /usr/bin/auroranet service install
+  /usr/bin/auroranet service start
+}
+
+post_upgrade() {
+  printf '\033[32m Restarting the AuroraNet service\033[0m\n'
+  /usr/bin/auroranet service install
+  /usr/bin/auroranet service start
+}
+
+pre_remove() {
+  printf '\033[32m Removing the AuroraNet service\033[0m\n'
+  systemctl stop auroranet 2>/dev/null || true
+  /usr/bin/auroranet service uninstall 2>/dev/null || true
+  systemctl daemon-reload 2>/dev/null || true
+}

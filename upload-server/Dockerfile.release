@@ -1,0 +1,4 @@
+FROM gcr.io/distroless/base:debug
+ENTRYPOINT [ "/go/bin/auroranet-upload" ]
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/auroranet-upload /go/bin/auroranet-upload

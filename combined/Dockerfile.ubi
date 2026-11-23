@@ -1,0 +1,31 @@
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:2d4c4551af6831dcd26bbf86108c4385de5183ec8fe6b5868f6f9640fe47f4ed
+
+ARG TARGETPLATFORM
+ARG VERSION=dev
+ARG RELEASE=1
+
+LABEL name="auroranet-server" \
+      maintainer="AuroraNet <dev@aurora-net.org>" \
+      vendor="AuroraNet" \
+      version="${VERSION}" \
+      release="${RELEASE}" \
+      summary="AuroraNet Server" \
+      description="AuroraNet Server runs the Management, Signal, Relay and STUN services of a self-hosted AuroraNet deployment in a single process."
+
+COPY --chmod=0555 ${TARGETPLATFORM}/auroranet-server /go/bin/auroranet-server
+COPY licenses/ /licenses/
+# Only the data directory shares the root group for arbitrary non-root UIDs.
+# Runtime-created keys and databases retain the application's restrictive modes.
+RUN mkdir -p /var/lib/auroranet /etc/auroranet && \
+    chown 1000:0 /var/lib/auroranet && \
+    chmod 0770 /var/lib/auroranet && \
+    chmod -R a+rX /licenses
+
+USER 1000:0
+ENV HOME=/var/lib/auroranet
+# Runtimes such as OpenShift and Podman reserve ports below 1024 for root, so
+# the mounted config must set server.listenAddress to an unprivileged port.
+EXPOSE 8443 3478/udp
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/go/bin/auroranet-server"]
+CMD ["--config", "/etc/auroranet/config.yaml"]
