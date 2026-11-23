@@ -94,7 +94,7 @@ require (
 	github.com/netbirdio/wireguard-go v0.0.0-20261021152105-0de46b309cdb
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/okta/okta-sdk-golang/v2 v2.18.0
-	github.com/ory/dockertest/v4 v4.0.0
+	github.com/ory/dockertest/v4 v4.0.1
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/petermattis/goid v0.0.0-20250303134427-723919f7f203
