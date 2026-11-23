@@ -18,8 +18,8 @@ set -euo pipefail
 ############################################
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly DASHBOARD_IMAGE="ghcr.io/haxygame/auroranet-dashboard:latest"
-readonly AURORANET_SERVER_IMAGE="ghcr.io/haxygame/auroranet-server:latest"
+readonly DASHBOARD_IMAGE="ghcr.io/haxygame-coding/auroranet-dashboard:latest"
+readonly AURORANET_SERVER_IMAGE="ghcr.io/haxygame-coding/auroranet-server:latest"
 readonly SED_STRIP_PADDING='s/=//g'
 readonly MSG_SEPARATOR="=========================================="
 readonly PROXY_TYPE_CADDY="caddy_embedded"

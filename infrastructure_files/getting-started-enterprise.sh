@@ -1058,7 +1058,7 @@ EOF
 
   dashboard:
     <<: *default
-    image: ghcr.io/haxygame/auroranet-dashboard-cloud:${AURORANET_DASHBOARD_TAG}
+    image: ghcr.io/haxygame-coding/auroranet-dashboard-cloud:${AURORANET_DASHBOARD_TAG}
     container_name: auroranet-dashboard
     networks: [auroranet]
     labels:
@@ -1103,7 +1103,7 @@ render_compose_server() {
   cat <<'EOF'
   auroranet-server:
     <<: *default
-    image: ghcr.io/haxygame/auroranet-server-cloud:${AURORANET_SERVER_TAG}
+    image: ghcr.io/haxygame-coding/auroranet-server-cloud:${AURORANET_SERVER_TAG}
     container_name: auroranet-server
     networks: [auroranet]
     depends_on:
@@ -1175,7 +1175,7 @@ render_compose_flow() {
 
   enricher:
     <<: *default
-    image: ghcr.io/haxygame/flow-enricher-cloud:${AURORANET_ENRICHER_TAG}
+    image: ghcr.io/haxygame-coding/flow-enricher-cloud:${AURORANET_ENRICHER_TAG}
     container_name: auroranet-enricher
     networks: [auroranet]
     depends_on:
@@ -1203,7 +1203,7 @@ render_compose_flow() {
 
   receiver:
     <<: *default
-    image: ghcr.io/haxygame/flow-receiver-cloud:${AURORANET_RECEIVER_TAG}
+    image: ghcr.io/haxygame-coding/flow-receiver-cloud:${AURORANET_RECEIVER_TAG}
     container_name: auroranet-receiver
     networks: [auroranet]
     depends_on:
@@ -1240,7 +1240,7 @@ render_compose_proxy() {
   # its own certificates. PROXY protocol v2 preserves the client IP.
   proxy:
     <<: *default
-    image: ghcr.io/haxygame/auroranet-proxy:${AURORANET_PROXY_TAG}
+    image: ghcr.io/haxygame-coding/auroranet-proxy:${AURORANET_PROXY_TAG}
     container_name: auroranet-proxy
     networks: [auroranet]
     depends_on:

@@ -65,8 +65,8 @@ body:
       label: Target repository
       description: Where should the implementation work happen?
       options:
-        - haxygame/auroranet
-        - ghcr.io/haxygame/auroranet-dashboard
+        - haxygame-coding/auroranet
+        - ghcr.io/haxygame-coding/auroranet-dashboard
         - haxygame/kubernetes-operator
         - haxygame/docs
         - Multiple repositories

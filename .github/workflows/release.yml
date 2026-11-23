@@ -217,7 +217,7 @@ jobs:
       - name: Set build vars
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame/auroranet" ]]; then
+          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame-coding/auroranet" ]]; then
             echo "x-${{ github.repository }}" 
             echo "x-${{ steps.semver_parser.outputs.prerelease }}"
             echo "SKIP_PUBLISH=false" >> $GITHUB_ENV
@@ -226,7 +226,7 @@ jobs:
             echo "x-${{ steps.semver_parser.outputs.prerelease }}"
           fi
           
-          if [[ "x-${{ github.repository }}" != "x-haxygame/auroranet" ]]; then
+          if [[ "x-${{ github.repository }}" != "x-haxygame-coding/auroranet" ]]; then
             echo "SKIP_DOCKER_PUSH=true" >> $GITHUB_ENV
           fi
 
@@ -465,7 +465,7 @@ jobs:
     name: "Red Hat"
     needs: release
     if: |
-      github.repository == 'haxygame/auroranet' &&
+      github.repository == 'haxygame-coding/auroranet' &&
       startsWith(github.ref, 'refs/tags/v') &&
       !contains(github.ref_name, '-')
     permissions:
@@ -500,7 +500,7 @@ jobs:
       - name: Set build vars
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame/auroranet" ]]; then
+          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame-coding/auroranet" ]]; then
             echo "x-${{ github.repository }}" 
             echo "x-${{ steps.semver_parser.outputs.prerelease }}"
             echo "SKIP_PUBLISH=false" >> $GITHUB_ENV
@@ -634,7 +634,7 @@ jobs:
       - name: Set build vars
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame/auroranet" ]]; then
+          if [[ "x-${{ steps.semver_parser.outputs.prerelease }}" == "x-" && "x-${{ github.repository }}" == "x-haxygame-coding/auroranet" ]]; then
             echo "x-${{ github.repository }}"
             echo "x-${{ steps.semver_parser.outputs.prerelease }}"
             echo "SKIP_PUBLISH=false" >> $GITHUB_ENV

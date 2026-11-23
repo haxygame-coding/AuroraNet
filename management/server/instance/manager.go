@@ -25,7 +25,7 @@ import (
 const (
 	// Version endpoints
 	managementVersionURL = "https://pkgs.netbird.io/releases/latest/version"
-	dashboardReleasesURL = "https://api.github.com/repos/ghcr.io/haxygame/auroranet-dashboard/releases/latest"
+	dashboardReleasesURL = "https://api.github.com/repos/ghcr.io/haxygame-coding/auroranet-dashboard/releases/latest"
 
 	// Cache TTL for version information
 	versionCacheTTL = 60 * time.Minute

@@ -10,7 +10,7 @@ FQDN pointing at the host, ports 80/443 TCP and 3478 UDP open, Docker Engine wit
 the Compose plugin.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/haxygame/auroranet/main/infrastructure_files/getting-started.sh -o getting-started.sh
+curl -fsSL https://raw.githubusercontent.com/haxygame-coding/auroranet/main/infrastructure_files/getting-started.sh -o getting-started.sh
 chmod +x getting-started.sh
 sudo ./getting-started.sh
 ```
@@ -27,9 +27,9 @@ sudo AURORANET_DOMAIN=vpn.aurora-net.org \
 
 Images pulled by the generated compose file:
 
-- `ghcr.io/haxygame/auroranet-server:latest`
-- `ghcr.io/haxygame/auroranet-dashboard:latest`
-- `ghcr.io/haxygame/auroranet-proxy:latest` (only when the proxy is enabled)
+- `ghcr.io/haxygame-coding/auroranet-server:latest`
+- `ghcr.io/haxygame-coding/auroranet-dashboard:latest`
+- `ghcr.io/haxygame-coding/auroranet-proxy:latest` (only when the proxy is enabled)
 
 ## Linux client
 

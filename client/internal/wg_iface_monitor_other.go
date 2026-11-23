@@ -23,7 +23,7 @@ import (
 // RTNLGRP_LINK netlink subscription instead, because on Linux
 // net.InterfaceByName issues syscall.NetlinkRIB(RTM_GETLINK, ...) which
 // dumps the entire kernel link table on every call and produces
-// significant allocation churn (haxygame/auroranet#3678).
+// significant allocation churn (haxygame-coding/auroranet#3678).
 //
 // Windows is also reported in #3678 as affected by RSS climb. A future
 // follow-up could implement an event-driven watcher there using

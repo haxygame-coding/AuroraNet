@@ -201,11 +201,11 @@ EOF
 # ---------------------------------------------------------------------------
 
 detect_combined_service() {
-  yq eval '.services | to_entries | map(select(.value.image | test("^(ghcr\\.io/)?ghcr.io/haxygame/auroranet-server([:@]|$)"))) | .[0].key // ""' "$COMPOSE_FILE"
+  yq eval '.services | to_entries | map(select(.value.image | test("^(ghcr\\.io/)?ghcr.io/haxygame-coding/auroranet-server([:@]|$)"))) | .[0].key // ""' "$COMPOSE_FILE"
 }
 
 detect_dashboard_service() {
-  yq eval '.services | to_entries | map(select(.value.image | test("^(ghcr\\.io/)?ghcr.io/haxygame/auroranet-dashboard([:@]|$)"))) | .[0].key // ""' "$COMPOSE_FILE"
+  yq eval '.services | to_entries | map(select(.value.image | test("^(ghcr\\.io/)?ghcr.io/haxygame-coding/auroranet-dashboard([:@]|$)"))) | .[0].key // ""' "$COMPOSE_FILE"
 }
 
 detect_config_yaml_host_path() {
@@ -362,7 +362,7 @@ render_override() {
 
 services:
   ${COMBINED_SERVICE}:
-    image: \${AURORANET_SERVER_IMAGE:-ghcr.io/haxygame/auroranet-server-cloud:latest}
+    image: \${AURORANET_SERVER_IMAGE:-ghcr.io/haxygame-coding/auroranet-server-cloud:latest}
     environment:
       NB_LICENSE_KEY: \${NB_LICENSE_KEY}
       AURORANET_LICENSE_SERVER_BASE_URL: \${AURORANET_LICENSE_SERVER_BASE_URL}
@@ -431,7 +431,7 @@ EOF
       - auroranet_nats_data:/data
 
   flow-enricher:
-    image: ghcr.io/haxygame/flow-enricher-cloud:latest
+    image: ghcr.io/haxygame-coding/flow-enricher-cloud:latest
     container_name: auroranet-flow-enricher
     restart: unless-stopped
     networks: [${COMPOSE_NETWORK}]
@@ -455,7 +455,7 @@ EOF
       NB_PERSISTENCE_RETENTION_PERIOD: 168h
 
   flow-receiver:
-    image: ghcr.io/haxygame/flow-receiver-cloud:latest
+    image: ghcr.io/haxygame-coding/flow-receiver-cloud:latest
     container_name: auroranet-flow-receiver
     restart: unless-stopped
     networks: [${COMPOSE_NETWORK}]
@@ -917,12 +917,12 @@ init_migration() {
   COMPOSE_NETWORK=$(detect_compose_network)
 
   if [[ -z "$COMBINED_SERVICE" ]]; then
-    echo "Could not find a service running ghcr.io/haxygame/auroranet-server or ghcr.io/haxygame/auroranet-server in $COMPOSE_FILE." > /dev/stderr
+    echo "Could not find a service running ghcr.io/haxygame-coding/auroranet-server or ghcr.io/haxygame-coding/auroranet-server in $COMPOSE_FILE." > /dev/stderr
     echo "This script targets the community combined-server deployment." > /dev/stderr
     exit 1
   fi
   if [[ -z "$DASHBOARD_SERVICE" ]]; then
-    echo "Could not find a service running ghcr.io/haxygame/auroranet-dashboard or ghcr.io/haxygame/auroranet-dashboard in $COMPOSE_FILE." > /dev/stderr
+    echo "Could not find a service running ghcr.io/haxygame-coding/auroranet-dashboard or ghcr.io/haxygame-coding/auroranet-dashboard in $COMPOSE_FILE." > /dev/stderr
     exit 1
   fi
   if [[ -z "$CONFIG_YAML_HOST" ]]; then

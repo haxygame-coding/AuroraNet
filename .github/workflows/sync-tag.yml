@@ -21,6 +21,6 @@ jobs:
         with:
           workflow: bump-auroranet.yml
           ref: main
-          repo: ghcr.io/haxygame/auroranet-dashboard
+          repo: ghcr.io/haxygame-coding/auroranet-dashboard
           token: ${{ secrets.NC_GITHUB_TOKEN }}
           inputs: '{ "tag": "${{ github.ref_name }}" }'

@@ -10,7 +10,7 @@ services:
   # UI dashboard
   dashboard:
     <<: *default
-    image: ghcr.io/haxygame/auroranet-dashboard:$AURORANET_DASHBOARD_TAG
+    image: ghcr.io/haxygame-coding/auroranet-dashboard:$AURORANET_DASHBOARD_TAG
     environment:
       # Endpoints
       - AURORANET_MGMT_API_ENDPOINT=$AURORANET_MGMT_API_ENDPOINT

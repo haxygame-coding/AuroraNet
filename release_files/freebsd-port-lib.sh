@@ -6,7 +6,7 @@
 # works on plain MAJOR.MINOR.PATCH versions and ignores canary, release
 # candidate and any other prerelease tag.
 
-GITHUB_REPO="haxygame/auroranet"
+GITHUB_REPO="haxygame-coding/auroranet"
 GITHUB_REPO_URL="https://github.com/${GITHUB_REPO}.git"
 PORTS_MIRROR_BASE="https://raw.githubusercontent.com/freebsd/freebsd-ports/main/security/auroranet"
 STABLE_VERSION_RE='^[0-9]+\.[0-9]+\.[0-9]+$'

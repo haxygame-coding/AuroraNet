@@ -19,7 +19,7 @@ import (
 // entire kernel link table on every call. On hosts with many veth
 // interfaces (containers, bridges) the resulting allocation churn was on
 // the order of ~1 GB/day from this single ticker, which on small ARM
-// hosts manifested as a slow RSS climb (see haxygame/auroranet#3678).
+// hosts manifested as a slow RSS climb (see haxygame-coding/auroranet#3678).
 //
 // The event-driven version below allocates only when the kernel actually
 // publishes a link event for the tracked interface — typically zero

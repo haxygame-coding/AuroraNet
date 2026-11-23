@@ -509,10 +509,10 @@ initialize_default_values() {
   AURORANET_STUN_PORT=3478
 
   # Docker images
-  DASHBOARD_IMAGE=${DASHBOARD_IMAGE:-"ghcr.io/haxygame/auroranet-dashboard:latest"}
+  DASHBOARD_IMAGE=${DASHBOARD_IMAGE:-"ghcr.io/haxygame-coding/auroranet-dashboard:latest"}
   # Combined server replaces separate signal, relay, and management containers
-  AURORANET_SERVER_IMAGE=${AURORANET_SERVER_IMAGE:-"ghcr.io/haxygame/auroranet-server:latest"}
-  AURORANET_PROXY_IMAGE=${AURORANET_PROXY_IMAGE:-"ghcr.io/haxygame/auroranet-proxy:latest"}
+  AURORANET_SERVER_IMAGE=${AURORANET_SERVER_IMAGE:-"ghcr.io/haxygame-coding/auroranet-server:latest"}
+  AURORANET_PROXY_IMAGE=${AURORANET_PROXY_IMAGE:-"ghcr.io/haxygame-coding/auroranet-proxy:latest"}
   TRAEFIK_IMAGE=${TRAEFIK_IMAGE:-"traefik:v3.7.18"}
   CROWDSEC_IMAGE=${CROWDSEC_IMAGE:-"crowdsecurity/crowdsec:v1.8.1"}
   # Reverse proxy configuration

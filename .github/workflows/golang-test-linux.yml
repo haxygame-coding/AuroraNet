@@ -175,7 +175,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: unit,client
 
   test_client_ui:
@@ -379,7 +379,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: unit,relay
 
   test_proxy:
@@ -436,7 +436,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: unit,proxy
 
   test_signal:
@@ -496,7 +496,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: unit,signal
 
   test_management:
@@ -587,7 +587,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: unit,management
 
   benchmark:
@@ -857,5 +857,5 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f #v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: haxygame/auroranet
+          slug: haxygame-coding/auroranet
           flags: integration,management

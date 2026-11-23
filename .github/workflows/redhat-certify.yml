@@ -68,12 +68,12 @@ jobs:
           # name, image repository, tag suffix (must match .goreleaser.yaml).
           # Keep the names in sync with the workflow_dispatch options above.
           components=(
-            "client-rootless ghcr.io/haxygame/auroranet -rootless-ubi"
-            "reverse-proxy ghcr.io/haxygame/auroranet-proxy -ubi"
-            "auroranet-server ghcr.io/haxygame/auroranet-server -ubi"
-            "management ghcr.io/haxygame/management -ubi"
-            "signal ghcr.io/haxygame/signal -ubi"
-            "relay ghcr.io/haxygame/relay -ubi"
+            "client-rootless ghcr.io/haxygame-coding/auroranet -rootless-ubi"
+            "reverse-proxy ghcr.io/haxygame-coding/auroranet-proxy -ubi"
+            "auroranet-server ghcr.io/haxygame-coding/auroranet-server -ubi"
+            "management ghcr.io/haxygame-coding/management -ubi"
+            "signal ghcr.io/haxygame-coding/signal -ubi"
+            "relay ghcr.io/haxygame-coding/relay -ubi"
           )
           matrix="[]"
           missing=()

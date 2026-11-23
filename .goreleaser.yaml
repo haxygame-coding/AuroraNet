@@ -406,8 +406,8 @@ dockers_v2:
      ids:
        - auroranet
      images:
-       - haxygame/auroranet
-       - ghcr.io/haxygame/auroranet
+       - haxygame-coding/auroranet
+       - ghcr.io/haxygame-coding/auroranet
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -430,8 +430,8 @@ dockers_v2:
      ids:
        - auroranet
      images:
-       - haxygame/auroranet
-       - ghcr.io/haxygame/auroranet
+       - haxygame-coding/auroranet
+       - ghcr.io/haxygame-coding/auroranet
      tags:
        - "{{ .Version }}-rootless"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}rootless-latest{{ end }}"
@@ -454,8 +454,8 @@ dockers_v2:
      ids:
        - auroranet
      images:
-       - haxygame/auroranet
-       - ghcr.io/haxygame/auroranet
+       - haxygame-coding/auroranet
+       - ghcr.io/haxygame-coding/auroranet
      tags:
        - "{{ .Version }}-rootless-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}rootless-ubi-latest{{ end }}"
@@ -492,7 +492,7 @@ dockers_v2:
        - auroranet-relay
      images:
        - haxygame/relay
-       - ghcr.io/haxygame/relay
+       - ghcr.io/haxygame-coding/relay
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -514,7 +514,7 @@ dockers_v2:
        - auroranet-relay
      images:
        - haxygame/relay
-       - ghcr.io/haxygame/relay
+       - ghcr.io/haxygame-coding/relay
      tags:
        - "{{ .Version }}-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
@@ -549,7 +549,7 @@ dockers_v2:
        - auroranet-signal
      images:
        - haxygame/signal
-       - ghcr.io/haxygame/signal
+       - ghcr.io/haxygame-coding/signal
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -571,7 +571,7 @@ dockers_v2:
        - auroranet-signal
      images:
        - haxygame/signal
-       - ghcr.io/haxygame/signal
+       - ghcr.io/haxygame-coding/signal
      tags:
        - "{{ .Version }}-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
@@ -606,7 +606,7 @@ dockers_v2:
        - auroranet-mgmt
      images:
        - haxygame/management
-       - ghcr.io/haxygame/management
+       - ghcr.io/haxygame-coding/management
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -628,7 +628,7 @@ dockers_v2:
        - auroranet-mgmt
      images:
        - haxygame/management
-       - ghcr.io/haxygame/management
+       - ghcr.io/haxygame-coding/management
      tags:
        - "{{ .Version }}-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
@@ -663,7 +663,7 @@ dockers_v2:
        - auroranet-upload
      images:
        - haxygame/upload
-       - ghcr.io/haxygame/upload
+       - ghcr.io/haxygame-coding/upload
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -684,8 +684,8 @@ dockers_v2:
      ids:
        - auroranet-server
      images:
-       - ghcr.io/haxygame/auroranet-server
-       - ghcr.io/haxygame/auroranet-server
+       - ghcr.io/haxygame-coding/auroranet-server
+       - ghcr.io/haxygame-coding/auroranet-server
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -706,8 +706,8 @@ dockers_v2:
      ids:
        - auroranet-server
      images:
-       - ghcr.io/haxygame/auroranet-server
-       - ghcr.io/haxygame/auroranet-server
+       - ghcr.io/haxygame-coding/auroranet-server
+       - ghcr.io/haxygame-coding/auroranet-server
      tags:
        - "{{ .Version }}-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
@@ -741,8 +741,8 @@ dockers_v2:
      ids:
        - auroranet-proxy
      images:
-       - ghcr.io/haxygame/auroranet-proxy
-       - ghcr.io/haxygame/auroranet-proxy
+       - ghcr.io/haxygame-coding/auroranet-proxy
+       - ghcr.io/haxygame-coding/auroranet-proxy
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -764,7 +764,7 @@ dockers_v2:
        - nblink
      images:
        - haxygame/nblink
-       - ghcr.io/haxygame/nblink
+       - ghcr.io/haxygame-coding/nblink
      tags:
        - "{{ .Version }}"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}latest{{ end }}"
@@ -785,8 +785,8 @@ dockers_v2:
      ids:
        - auroranet-proxy
      images:
-       - ghcr.io/haxygame/auroranet-proxy
-       - ghcr.io/haxygame/auroranet-proxy
+       - ghcr.io/haxygame-coding/auroranet-proxy
+       - ghcr.io/haxygame-coding/auroranet-proxy
      tags:
        - "{{ .Version }}-ubi"
        - "{{ if eq .Env.SKIP_LATEST \"false\" }}ubi-latest{{ end }}"
