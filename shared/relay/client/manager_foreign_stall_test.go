@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net"
 	"net/netip"
 	"testing"
 	"time"
@@ -37,6 +38,19 @@ func startManagerTestRelay(t *testing.T, ctx context.Context, address, peerID st
 	return m
 }
 
+// freeRelayAddr returns a loopback address that is free when the test asks for
+// it. These tests start real listeners, so a fixed port makes the suite fail
+// whenever another process on the runner already holds that number.
+func freeRelayAddr(t *testing.T) string {
+	t.Helper()
+
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	addr := l.Addr().String()
+	require.NoError(t, l.Close())
+	return addr
+}
+
 // TestOpenConn_DoesNotHoldRelayClientLockAcrossDial asserts that dialing an
 // unreachable foreign relay does not stall the relay bookkeeping of the whole node.
 // onServerDisconnected needs relayClientMu in write mode, and a pending writer also
@@ -46,7 +60,7 @@ func TestOpenConn_DoesNotHoldRelayClientLockAcrossDial(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	m := startManagerTestRelay(t, ctx, "localhost:52801", "alice")
+	m := startManagerTestRelay(t, ctx, freeRelayAddr(t), "alice")
 	stalling := stallingRelayListener(t)
 
 	dialDone := make(chan struct{})
@@ -92,8 +106,8 @@ func TestEvictForeignRelay_KeepsConnectedClient(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	alice := startManagerTestRelay(t, ctx, "localhost:52802", "alice")
-	bob := startManagerTestRelay(t, ctx, "localhost:52803", "bob")
+	alice := startManagerTestRelay(t, ctx, freeRelayAddr(t), "alice")
+	bob := startManagerTestRelay(t, ctx, freeRelayAddr(t), "bob")
 
 	bobsSrvAddr, _, err := bob.RelayInstanceAddress()
 	require.NoError(t, err)

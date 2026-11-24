@@ -72,6 +72,7 @@ jobs:
 
       - name: Build server binaries
         run: |
+          mkdir -p dist/ci/server
           CGO_ENABLED=1 go build -trimpath -o dist/ci/server/ \
             ./management ./signal ./relay ./combined ./proxy/cmd/proxy
 
