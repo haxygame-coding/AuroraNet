@@ -5,7 +5,7 @@
   by importing a sidecar auroranet-policy.reg file.
 
 .DESCRIPTION
-  Windows counterpart of docs/auroranet-macos.sh. Outcome:
+  Writes the AuroraNet MDM policy to the Windows registry. Outcome:
   HKLM\Software\Policies\AuroraNet populated from the attached
   auroranet-policy.reg file, daemon picks up the change via the
   1-minute MDM reload ticker.

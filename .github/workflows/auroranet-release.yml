@@ -43,10 +43,10 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           LDFLAGS="-s -w -X github.com/netbirdio/netbird/version.version=$VERSION"
-          # install.sh and the updater download auroranet_<version>_<os>_<arch>.tar.gz
-          # with the binary at the archive root, so every target they accept ships
-          # its own archive. The client cross-compiles without cgo.
-          for target in linux/amd64 linux/arm64 linux/386 darwin/amd64 darwin/arm64; do
+          # install.sh downloads auroranet_<version>_<os>_<arch>.tar.gz with the
+          # binary at the archive root, so every target it accepts ships its own
+          # archive. macOS is not supported; Windows ships the MSI built below.
+          for target in linux/amd64 linux/arm64 linux/386; do
             os="${target%/*}"
             arch="${target#*/}"
             stage="dist/archives/${os}-${arch}"

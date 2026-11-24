@@ -23,7 +23,6 @@ builds:
     env: [CGO_ENABLED=0]
     goos:
       - linux
-      - darwin
       - windows
     goarch:
       - arm
@@ -242,7 +241,6 @@ builds:
     binary: nblink
     goos:
       - linux
-      - darwin
       - windows
     goarch:
       - amd64
@@ -252,8 +250,6 @@ builds:
       - 7
     ignore:
       - goos: windows
-        goarch: arm
-      - goos: darwin
         goarch: arm
     ldflags:
       - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}}
@@ -280,9 +276,6 @@ builds:
     ldflags:
       - -s -w -X github.com/netbirdio/netbird/version.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser
     mod_timestamp: "{{ .CommitTimestamp }}"
-
-universal_binaries:
-  - id: auroranet
 
 archives:
   - builds:
@@ -870,8 +863,8 @@ checksum:
 
 release:
   # The signing pipeline (haxygame-coding/sign-pipelines, dispatched by
-  # trigger_signer) marks the release latest once the Windows and macOS
-  # artifacts are signed. Without this override goreleaser marks it latest
+  # trigger_signer) marks the release latest once the Windows artifacts are
+  # signed. Without this override goreleaser marks it latest
   # at publish time, while those artifacts are still unsigned.
   make_latest: false
   # Mark x.y.z-rc.* and other prerelease tags as prereleases on GitHub.

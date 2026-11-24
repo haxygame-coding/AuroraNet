@@ -70,16 +70,8 @@ download_release_binary() {
     BASE_URL="https://github.com/${OWNER}/${REPO}/releases/download"
     BINARY_BASE_NAME="${VERSION#v}_${OS_TYPE}_${ARCH}.tar.gz"
 
-    # for Darwin, download the signed AuroraNet-UI
-    if [ "$OS_TYPE" = "darwin" ] && [ "$1" = "$UI_APP" ]; then
-        BINARY_BASE_NAME="${VERSION#v}_${OS_TYPE}_${ARCH}_signed.zip"
-    fi
-
     if [ "$1" = "$UI_APP" ]; then
        BINARY_NAME="$1-${OS_TYPE}_${BINARY_BASE_NAME}"
-       if [ "$OS_TYPE" = "darwin" ]; then
-         BINARY_NAME="$1_${BINARY_BASE_NAME}"
-       fi
     else
        BINARY_NAME="$1_${BINARY_BASE_NAME}"
     fi
@@ -95,24 +87,11 @@ download_release_binary() {
     fi
 
 
-    if [ "$OS_TYPE" = "darwin" ] && [ "$1" = "$UI_APP" ]; then
-        INSTALL_DIR="/Applications/AuroraNet UI.app"
-
-        if test -d "$INSTALL_DIR" ; then
-          echo "removing $INSTALL_DIR"
-          rm -rfv "$INSTALL_DIR"
-        fi
-
-        # Unzip the app and move to INSTALL_DIR
-        unzip -q -o "$ARCHIVE_PATH" -d "$NB_TMPDIR"
-        mv -v "${NB_TMPDIR}/auroranet_ui_${OS_TYPE}/" "$INSTALL_DIR/" || mv -v "${NB_TMPDIR}/auroranet_ui_${OS_TYPE}_${ARCH}/" "$INSTALL_DIR/"
-    else
-        ${SUDO} mkdir -p "$INSTALL_DIR"
-        tar -xzvf "$ARCHIVE_PATH" -C "$NB_TMPDIR"
-        ${SUDO} mv "${NB_TMPDIR}/${1%_"${BINARY_BASE_NAME}"}" "$INSTALL_DIR/"
-        if [ "$1" = "$CLI_APP" ]; then
-            ${SUDO} ln -sfn "$CLI_APP" "$INSTALL_DIR/auroranet"
-        fi
+    ${SUDO} mkdir -p "$INSTALL_DIR"
+    tar -xzvf "$ARCHIVE_PATH" -C "$NB_TMPDIR"
+    ${SUDO} mv "${NB_TMPDIR}/${1%_"${BINARY_BASE_NAME}"}" "$INSTALL_DIR/"
+    if [ "$1" = "$CLI_APP" ]; then
+        ${SUDO} ln -sfn "$CLI_APP" "$INSTALL_DIR/auroranet"
     fi
 }
 
@@ -193,20 +172,6 @@ install_native_binaries() {
     fi
 }
 
-# Handle macOS .pkg installer
-install_pkg() {
-  case "$(uname -m)" in
-    x86_64) ARCH="amd64" ;;
-    arm64|aarch64) ARCH="arm64" ;;
-    *) echo "Unsupported macOS arch: $(uname -m)" >&2; exit 1 ;;
-  esac
-
-  PKG_URL=$(curl -sIL --proto "$PROTO_HTTPS" --proto-redir "$PROTO_HTTPS" -o /dev/null -w '%{url_effective}' "https://pkgs.netbird.io/macos/${ARCH}")
-  echo "Downloading AuroraNet macOS installer from https://pkgs.netbird.io/macos/${ARCH}"
-  curl -fsSL --proto "$PROTO_HTTPS" --proto-redir "$PROTO_HTTPS" -o "${NB_TMPDIR}/auroranet.pkg" "${PKG_URL}"
-  ${SUDO} installer -pkg "${NB_TMPDIR}/auroranet.pkg" -target /
-}
-
 check_use_bin_variable() {
     if [ "${USE_BIN_INSTALL}-x" = "true-x" ]; then
       echo "The installation will be performed using binary files"
@@ -271,16 +236,6 @@ install_auroranet() {
          ${SUDO} auroranet service install || true
          ${SUDO} auroranet service start || true
     ;;
-    pkg)
-        # Check if the package is already installed
-        if [ -f /Library/Receipts/auroranet.pkg ]; then
-            echo "AuroraNet is already installed. Please remove it before proceeding."
-            exit 1
-        fi
-
-        # Install the package
-        install_pkg
-    ;;
     brew)
         # Remove AuroraNet if it had been installed using Homebrew before
         if brew ls --versions auroranet >/dev/null 2>&1; then
@@ -295,9 +250,6 @@ install_auroranet() {
         fi
 
         brew install haxygame-coding/tap/auroranet
-        if ! $SKIP_UI_APP; then
-            brew install --cask haxygame-coding/tap/auroranet-ui
-        fi
     ;;
     *)
       if [ "$OS_NAME" = "nixos" ];then
@@ -328,7 +280,7 @@ install_auroranet() {
     echo "package_manager=$PACKAGE_MANAGER" | ${SUDO} tee "$CONFIG_FILE" > /dev/null
 
     # Load and start auroranet service
-    if [ "$PACKAGE_MANAGER" != "rpm-ostree" ] && [ "$PACKAGE_MANAGER" != "pkg" ]; then
+    if [ "$PACKAGE_MANAGER" != "rpm-ostree" ]; then
         if ! ${SUDO} auroranet service install 2>&1; then
             echo "AuroraNet service has already been loaded"
         fi
@@ -470,18 +422,10 @@ if type uname >/dev/null 2>&1; then
 
 
 		;;
-		Darwin)
-            OS_NAME="macos"
-			OS_TYPE="darwin"
-            INSTALL_DIR="/usr/local/bin"
-
-            # Check the availability of a compatible package manager
-            if check_use_bin_variable; then
-                PACKAGE_MANAGER="bin"
-            else
-              PACKAGE_MANAGER="pkg"
-            fi
-		;;
+        Darwin)
+            echo "macOS is not supported. Use Linux (Arch, Debian, Ubuntu) or Windows." >&2
+            exit 1
+            ;;
 	esac
 fi
 

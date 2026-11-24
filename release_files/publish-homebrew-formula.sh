@@ -10,7 +10,8 @@
 #                  commits Formula/auroranet.rb and pushes it
 #
 # The formula points at the release archives, so it has to run once they were
-# built. Only the macOS and Linux architectures Homebrew supports are listed.
+# built. Homebrew runs on Linux, so the formula lists the Linux architectures it
+# supports; macOS is not a supported platform.
 set -euo pipefail
 
 VERSION="${1:?usage: $0 <version> <release-dir> [<tap-dir>]}"
@@ -38,11 +39,9 @@ sha256_of() {
     fi
 }
 
-DARWIN_AMD64=$(sha256_of darwin amd64)
-DARWIN_ARM64=$(sha256_of darwin arm64)
 LINUX_AMD64=$(sha256_of linux amd64)
 LINUX_ARM64=$(sha256_of linux arm64)
-readonly DARWIN_AMD64 DARWIN_ARM64 LINUX_AMD64 LINUX_ARM64
+readonly LINUX_AMD64 LINUX_ARM64
 
 if [ -z "$TAP_DIR" ]; then
     managed_tap=true
@@ -67,18 +66,6 @@ class Auroranet < Formula
   homepage "https://aurora-net.org/"
   version "${VERSION}"
   license "BSD-3-Clause"
-
-  on_macos do
-    on_arm do
-      url "${ARCHIVE_BASE}/auroranet_${VERSION}_darwin_arm64.tar.gz"
-      sha256 "${DARWIN_ARM64}"
-    end
-
-    on_intel do
-      url "${ARCHIVE_BASE}/auroranet_${VERSION}_darwin_amd64.tar.gz"
-      sha256 "${DARWIN_AMD64}"
-    end
-  end
 
   on_linux do
     on_arm do
