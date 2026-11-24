@@ -341,7 +341,7 @@ func TestMaskEmail(t *testing.T) {
 		{
 			name:     "plus addressing is masked along with the rest of the local part",
 			email:    "admin+auroranet@example.com",
-			expected: "ad****d@example.com",
+			expected: "ad****t@example.com",
 		},
 		{
 			name:     "separators inside the local part are not treated specially",

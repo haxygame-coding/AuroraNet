@@ -426,6 +426,10 @@ if type uname >/dev/null 2>&1; then
             echo "macOS is not supported. Use Linux (Arch, Debian, Ubuntu) or Windows." >&2
             exit 1
             ;;
+        *)
+            echo "$(uname) is not supported. Use Linux (Arch, Debian, Ubuntu) or Windows." >&2
+            exit 1
+            ;;
 	esac
 fi
 
