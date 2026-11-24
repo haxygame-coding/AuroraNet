@@ -39,6 +39,22 @@ jobs:
           CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-proxy ./proxy/cmd/proxy
           CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet ./client
 
+      - name: Build release archives
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LDFLAGS="-s -w -X github.com/netbirdio/netbird/version.version=$VERSION"
+          # install.sh and the updater download auroranet_<version>_<os>_<arch>.tar.gz
+          # with the binary at the archive root, so every target they accept ships
+          # its own archive. The client cross-compiles without cgo.
+          for target in linux/amd64 linux/arm64 linux/386 darwin/amd64 darwin/arm64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            stage="dist/archives/${os}-${arch}"
+            mkdir -p "$stage"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -ldflags "$LDFLAGS" -o "$stage/auroranet" ./client
+            tar -C "$stage" -czf "dist/release/auroranet_${VERSION}_${os}_${arch}.tar.gz" auroranet
+          done
+
       - name: Build Debian package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
@@ -107,14 +123,26 @@ jobs:
       - name: Checksums and signature
         run: |
           cd dist/release
-          sha256sum ./*.deb ./*.pkg.tar.zst ./*.msi > SHA256SUMS
+          sha256sum ./*.deb ./*.pkg.tar.zst ./*.msi ./*.tar.gz > SHA256SUMS
           if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]]; then
             echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
             gpg --batch --yes --armor --detach-sign SHA256SUMS
-            for f in ./*.deb ./*.pkg.tar.zst ./*.msi; do gpg --batch --yes --armor --detach-sign "$f"; done
+            for f in ./*.deb ./*.pkg.tar.zst ./*.msi ./*.tar.gz; do gpg --batch --yes --armor --detach-sign "$f"; done
           fi
 
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/release/*
           generate_release_notes: true
+
+      # The tap only exists once HOMEBREW_TAP_GITHUB_TOKEN can write to it; the
+      # step is skipped rather than failing the release when it is absent.
+      - name: Publish Homebrew formula
+        env:
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$HOMEBREW_TAP_GITHUB_TOKEN" ]; then
+            echo "::notice::HOMEBREW_TAP_GITHUB_TOKEN is not set, skipping the Homebrew tap update"
+            exit 0
+          fi
+          bash release_files/publish-homebrew-formula.sh "${GITHUB_REF_NAME#v}" dist/release
