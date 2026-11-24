@@ -7,13 +7,13 @@
 #   --sign    GPG-sign SHA256SUMS and every artifact
 #
 # Environment: AURORANET_VERSION (default 1.0.0), AURORANET_GHCR (default
-# ghcr.io/haxygame), GO, NFPM, GPG_KEY (signing key id).
+# ghcr.io/haxygame-coding), GO, NFPM, GPG_KEY (signing key id).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 REPO_ROOT="$PWD"
 VERSION="${AURORANET_VERSION:-1.0.0}"
-GHCR="${AURORANET_GHCR:-ghcr.io/haxygame}"
+GHCR="${AURORANET_GHCR:-ghcr.io/haxygame-coding}"
 GO="${GO:-go}"
 NFPM="${NFPM:-nfpm}"
 DIST="$REPO_ROOT/dist/release"

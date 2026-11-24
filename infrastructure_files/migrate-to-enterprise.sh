@@ -362,7 +362,7 @@ render_override() {
 
 services:
   ${COMBINED_SERVICE}:
-    image: \${AURORANET_SERVER_IMAGE:-ghcr.io/haxygame-coding/auroranet-server-cloud:latest}
+    image: \${AURORANET_SERVER_IMAGE:-ghcr.io/haxygame-coding/auroranet-server:latest}
     environment:
       NB_LICENSE_KEY: \${NB_LICENSE_KEY}
       AURORANET_LICENSE_SERVER_BASE_URL: \${AURORANET_LICENSE_SERVER_BASE_URL}

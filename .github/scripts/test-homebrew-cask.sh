@@ -17,8 +17,8 @@ readonly test_dir="${RUNNER_TEMP:?}/homebrew-cask"
 readonly results_dir="$test_dir/results"
 readonly app='/Applications/AuroraNet.app'
 readonly plist='/Library/LaunchDaemons/auroranet.plist'
-readonly cask='haxygame/tap/auroranet-ui'
-readonly formula='haxygame/tap/auroranet'
+readonly cask='haxygame-coding/tap/auroranet-ui'
+readonly formula='haxygame-coding/tap/auroranet'
 readonly published_cask="$test_dir/published-auroranet-ui.rb"
 readonly legacy_cask="$test_dir/legacy-auroranet-ui.rb"
 readonly rendered_cask="$test_dir/rendered-auroranet-ui.rb"
@@ -244,8 +244,8 @@ assert_steps_metadata() {
 
 brew --version
 sw_vers
-brew tap haxygame/tap "${GITHUB_WORKSPACE:?}/.homebrew-cask-tap"
-tap_dir=$(brew --repository haxygame/tap)
+brew tap haxygame-coding/tap "${GITHUB_WORKSPACE:?}/.homebrew-cask-tap"
+tap_dir=$(brew --repository haxygame-coding/tap)
 readonly tap_dir
 
 [[ -f "$tap_dir/Casks/auroranet-ui.rb" ]] || fail "The tap has no Casks/auroranet-ui.rb."

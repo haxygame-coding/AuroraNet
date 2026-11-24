@@ -43,7 +43,7 @@ docker run -d --name auroranet-management \
 -p 443:443  \
 -v auroranet-mgmt:/var/lib/auroranet  \
 -v ./config.json:/etc/auroranet/config.json  \
-haxygame/management:latest \
+ghcr.io/haxygame-coding/auroranet-management:latest \
 --letsencrypt-domain <YOUR-DOMAIN>
 ```
 > An example of config.json can be found here [management.json](../infrastructure_files/management.json.tmpl)
@@ -82,7 +82,7 @@ docker run -d --name auroranet-management \
 -p 33073:33073  \
 -v auroranet-mgmt:/var/lib/auroranet  \
 -v ./config.json:/etc/auroranet/config.json  \
-haxygame/management:latest
+ghcr.io/haxygame-coding/auroranet-management:latest
 ```
 ### Debug tag
 We also publish a docker image with the debug tag which has the log-level set to default, plus it uses the ```gcr.io/distroless/base:debug``` image that can be used with docker exec in order to run some commands in the Management container.
@@ -91,7 +91,7 @@ shell $ docker run -d --name auroranet-management-debug \
 -p 33073:33073  \
 -v auroranet-mgmt:/var/lib/auroranet  \
 -v ./config.json:/etc/auroranet/config.json  \
-haxygame/management:debug-latest
+ghcr.io/haxygame-coding/auroranet-management:debug-latest
 
 shell $ docker exec -ti auroranet-management-debug /bin/sh
 container-shell $ 

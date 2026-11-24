@@ -5,8 +5,8 @@ set -e
 CONFIG_FOLDER="/etc/auroranet"
 CONFIG_FILE="$CONFIG_FOLDER/install.conf"
 
-OWNER="haxygame"
-REPO="auroranet"
+OWNER="haxygame-coding"
+REPO="AuroraNet"
 CLI_APP="auroranet"
 UI_APP="auroranet-ui"
 
@@ -47,7 +47,9 @@ get_release() {
     local RELEASE=$1
     if [ "$RELEASE" = "latest" ]; then
         local TAG="latest"
-        local URL="https://pkgs.netbird.io/releases/latest"
+        # /releases/latest omits prereleases, and AuroraNet publishes its
+        # releases as prereleases, so resolve the newest entry instead.
+        local URL="https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=1"
     else
         local TAG="tags/${RELEASE}"
         local URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/${TAG}"
@@ -292,9 +294,9 @@ install_auroranet() {
             brew unlink auroranet
         fi
 
-        brew install haxygame/tap/auroranet
+        brew install haxygame-coding/tap/auroranet
         if ! $SKIP_UI_APP; then
-            brew install --cask haxygame/tap/auroranet-ui
+            brew install --cask haxygame-coding/tap/auroranet-ui
         fi
     ;;
     *)

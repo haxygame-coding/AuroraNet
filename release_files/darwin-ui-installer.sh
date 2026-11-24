@@ -15,7 +15,7 @@ fi
 NB_BIN=$(which auroranet)
 if [ -z "$NB_BIN" ]
 then
-  echo "AuroraNet daemon is not installed. Please run: brew install haxygame/tap/auroranet"
+  echo "AuroraNet daemon is not installed. Please run: brew install haxygame-coding/tap/auroranet"
   exit 1
 fi
 NB_UI_VERSION=$1
@@ -25,7 +25,7 @@ then
   echo "AuroraNet's daemon is running with a different version than the AuroraNet UI:"
   echo "AuroraNet UI Version: $NB_UI_VERSION"
   echo "AuroraNet Daemon Version: $NB_VERSION"
-  echo "Please run: brew install haxygame/tap/auroranet"
+  echo "Please run: brew install haxygame-coding/tap/auroranet"
   echo "to update it"
 fi
 

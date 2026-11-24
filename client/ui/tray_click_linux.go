@@ -19,7 +19,7 @@ package main
 // on ANY click and only reports the menu opening via dbusmenu
 // Event("opened"). Upstream Wails treated that event as a click, so on GNOME
 // both buttons raised the main window on top of the menu, and on KDE/Waybar
-// a right click raised it over the freshly opened menu. The haxygame/wails
+// a right click raised it over the freshly opened menu. The haxygame-coding/wails
 // fork (go.mod replace) drops that heuristic: a menu open never fires
 // OnClick. On GNOME the main window is reached via the "Open AuroraNet" menu
 // entry; left-click-opens-window is not achievable there anyway, since the

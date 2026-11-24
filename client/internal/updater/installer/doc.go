@@ -43,7 +43,7 @@
 //     - Windows EXE: installer.exe /S
 //     - Windows MSI: msiexec.exe /i installer.msi /qn /norestart REBOOT=ReallySuppress /l*v msi.log
 //     - macOS PKG: installer -pkg installer.pkg -target /
-//     - macOS Homebrew: brew upgrade haxygame/tap/auroranet
+//     - macOS Homebrew: brew upgrade haxygame-coding/tap/auroranet
 //  4. Installer terminates the daemon
 //  5. Installer replaces binaries with new version
 //  6. Updater waits for installer to complete. On Windows, MSI exit codes 3010

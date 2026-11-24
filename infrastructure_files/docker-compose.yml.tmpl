@@ -39,7 +39,7 @@ services:
   # Signal
   signal:
     <<: *default
-    image: haxygame/signal:$AURORANET_SIGNAL_TAG
+    image: ghcr.io/haxygame-coding/auroranet-signal:$AURORANET_SIGNAL_TAG
     depends_on:
           - dashboard
     volumes:
@@ -60,7 +60,7 @@ services:
   # Relay
   relay:
     <<: *default
-    image: haxygame/relay:$AURORANET_RELAY_TAG
+    image: ghcr.io/haxygame-coding/auroranet-relay:$AURORANET_RELAY_TAG
     environment:
     - NB_LOG_LEVEL=info
     - NB_LISTEN_ADDRESS=:$AURORANET_RELAY_PORT
@@ -73,7 +73,7 @@ services:
   # Management
   management:
     <<: *default
-    image: haxygame/management:$AURORANET_MANAGEMENT_TAG
+    image: ghcr.io/haxygame-coding/auroranet-management:$AURORANET_MANAGEMENT_TAG
     depends_on:
       - dashboard
     volumes:

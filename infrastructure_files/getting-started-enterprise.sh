@@ -1058,7 +1058,7 @@ EOF
 
   dashboard:
     <<: *default
-    image: ghcr.io/haxygame-coding/auroranet-dashboard-cloud:${AURORANET_DASHBOARD_TAG}
+    image: ghcr.io/haxygame-coding/auroranet-dashboard:${AURORANET_DASHBOARD_TAG}
     container_name: auroranet-dashboard
     networks: [auroranet]
     labels:
@@ -1103,7 +1103,7 @@ render_compose_server() {
   cat <<'EOF'
   auroranet-server:
     <<: *default
-    image: ghcr.io/haxygame-coding/auroranet-server-cloud:${AURORANET_SERVER_TAG}
+    image: ghcr.io/haxygame-coding/auroranet-server:${AURORANET_SERVER_TAG}
     container_name: auroranet-server
     networks: [auroranet]
     depends_on:

@@ -53,7 +53,7 @@ func NewNetWithDiscover(ctx context.Context, iFaceDiscover ExternalIFaceDiscover
 		interfaceFilter: InterfaceFilter(disallowList, detector),
 		ctx:             ctx,
 	}
-	// current ExternalIFaceDiscover implement in android-client https://github.dev/haxygame/android-client
+	// current ExternalIFaceDiscover implement in android-client https://github.dev/haxygame-coding/android-client
 	// so in android cli use pionDiscover
 	if netstack.IsEnabled() {
 		n.iFaceDiscover = pionDiscover{}

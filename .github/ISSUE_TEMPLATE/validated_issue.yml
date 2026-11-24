@@ -67,8 +67,8 @@ body:
       options:
         - haxygame-coding/auroranet
         - ghcr.io/haxygame-coding/auroranet-dashboard
-        - haxygame/kubernetes-operator
-        - haxygame/docs
+        - haxygame-coding/kubernetes-operator
+        - haxygame-coding/docs
         - Multiple repositories
         - Unknown / needs routing
     validations:

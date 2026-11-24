@@ -54,7 +54,7 @@ docker run --rm -p 127.0.0.1:8080:8080 \
   -e NB_SETUP_KEY=file:/run/secrets/nb_setup_key \
   -e NB_FORWARD='http://0.0.0.0:8080=https://grafana.internal' \
   -e NB_ALLOW_PUBLIC_BIND=true \
-  haxygame/nblink
+  haxygame-coding/nblink
 ```
 
 The key file has to exist before the run and be readable by the container
@@ -119,7 +119,7 @@ forward on `localhost`, so the listener stays on loopback and needs neither
 ```yaml
 containers:
   - name: nblink
-    image: haxygame/nblink
+    image: haxygame-coding/nblink
     env:
       - name: NB_FORWARD
         value: http://8080=https://grafana.internal

@@ -491,7 +491,7 @@ dockers_v2:
      ids:
        - auroranet-relay
      images:
-       - haxygame/relay
+       - ghcr.io/haxygame-coding/auroranet-relay
        - ghcr.io/haxygame-coding/relay
      tags:
        - "{{ .Version }}"
@@ -513,7 +513,7 @@ dockers_v2:
      ids:
        - auroranet-relay
      images:
-       - haxygame/relay
+       - ghcr.io/haxygame-coding/auroranet-relay
        - ghcr.io/haxygame-coding/relay
      tags:
        - "{{ .Version }}-ubi"
@@ -548,7 +548,7 @@ dockers_v2:
      ids:
        - auroranet-signal
      images:
-       - haxygame/signal
+       - ghcr.io/haxygame-coding/auroranet-signal
        - ghcr.io/haxygame-coding/signal
      tags:
        - "{{ .Version }}"
@@ -570,7 +570,7 @@ dockers_v2:
      ids:
        - auroranet-signal
      images:
-       - haxygame/signal
+       - ghcr.io/haxygame-coding/auroranet-signal
        - ghcr.io/haxygame-coding/signal
      tags:
        - "{{ .Version }}-ubi"
@@ -605,7 +605,7 @@ dockers_v2:
      ids:
        - auroranet-mgmt
      images:
-       - haxygame/management
+       - ghcr.io/haxygame-coding/auroranet-management
        - ghcr.io/haxygame-coding/management
      tags:
        - "{{ .Version }}"
@@ -627,7 +627,7 @@ dockers_v2:
      ids:
        - auroranet-mgmt
      images:
-       - haxygame/management
+       - ghcr.io/haxygame-coding/auroranet-management
        - ghcr.io/haxygame-coding/management
      tags:
        - "{{ .Version }}-ubi"
@@ -662,7 +662,7 @@ dockers_v2:
      ids:
        - auroranet-upload
      images:
-       - haxygame/upload
+       - haxygame-coding/upload
        - ghcr.io/haxygame-coding/upload
      tags:
        - "{{ .Version }}"
@@ -763,7 +763,7 @@ dockers_v2:
      ids:
        - nblink
      images:
-       - haxygame/nblink
+       - haxygame-coding/nblink
        - ghcr.io/haxygame-coding/nblink
      tags:
        - "{{ .Version }}"
@@ -822,7 +822,7 @@ brews:
     # The tap holds one version, so a patch on an older line must not overwrite it.
     skip_upload: "{{ .Env.SKIP_LATEST }}"
     repository:
-      owner: haxygame
+      owner: haxygame-coding
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     commit_author:
@@ -869,7 +869,7 @@ checksum:
     - glob: ./infrastructure_files/migrate-to-enterprise.sh
 
 release:
-  # The signing pipeline (haxygame/sign-pipelines, dispatched by
+  # The signing pipeline (haxygame-coding/sign-pipelines, dispatched by
   # trigger_signer) marks the release latest once the Windows and macOS
   # artifacts are signed. Without this override goreleaser marks it latest
   # at publish time, while those artifacts are still unsigned.

@@ -167,11 +167,11 @@ func (u *Installer) updateHomeBrew(ctx context.Context) error {
 	// Homebrew must be run as a non-root user
 	// To find out which user installed AuroraNet using HomeBrew we can check the owner of our brew tap directory
 	// Check both Apple Silicon and Intel Mac paths
-	brewTapPath := "/opt/homebrew/Library/Taps/haxygame/homebrew-tap/"
+	brewTapPath := "/opt/homebrew/Library/Taps/haxygame-coding/homebrew-tap/"
 	brewBinPath := "/opt/homebrew/bin/brew"
 	if _, err := os.Stat(brewTapPath); os.IsNotExist(err) {
 		// Try Intel Mac path
-		brewTapPath = "/usr/local/Homebrew/Library/Taps/haxygame/homebrew-tap/"
+		brewTapPath = "/usr/local/Homebrew/Library/Taps/haxygame-coding/homebrew-tap/"
 		brewBinPath = "/usr/local/bin/brew"
 	}
 
@@ -196,15 +196,15 @@ func (u *Installer) updateHomeBrew(ctx context.Context) error {
 	homeDir := brewUser.HomeDir
 
 	// Check if auroranet-ui is installed (must run as the brew user, not root)
-	checkUICmd := exec.CommandContext(ctx, "sudo", "-u", userName, brewBinPath, "list", "--formula", "haxygame/tap/auroranet-ui")
+	checkUICmd := exec.CommandContext(ctx, "sudo", "-u", userName, brewBinPath, "list", "--formula", "haxygame-coding/tap/auroranet-ui")
 	checkUICmd.Env = append(os.Environ(), "HOME="+homeDir)
 	uiInstalled := checkUICmd.Run() == nil
 
 	// Homebrew does not support installing specific versions
 	// Thus it will always update to latest and ignore targetVersion
-	upgradeArgs := []string{"-u", userName, brewBinPath, "upgrade", "haxygame/tap/auroranet"}
+	upgradeArgs := []string{"-u", userName, brewBinPath, "upgrade", "haxygame-coding/tap/auroranet"}
 	if uiInstalled {
-		upgradeArgs = append(upgradeArgs, "haxygame/tap/auroranet-ui")
+		upgradeArgs = append(upgradeArgs, "haxygame-coding/tap/auroranet-ui")
 	}
 
 	cmd := exec.CommandContext(ctx, "sudo", upgradeArgs...)

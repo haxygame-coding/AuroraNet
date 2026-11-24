@@ -709,7 +709,7 @@ assert.Equal(t, expectedResult, result, "Result should match expected")
   still apply to each one.
 
 - **User-facing changes need a docs PR** in
-  [haxygame/docs](https://github.com/netbirdio/docs), linked from the PR
+  [haxygame-coding/docs](https://github.com/netbirdio/docs), linked from the PR
   description.
 
 ## After you push: CI and review bots

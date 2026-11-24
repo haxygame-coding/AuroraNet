@@ -30,6 +30,14 @@ jobs:
           CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/auroranet-linux-amd64 ./client
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$LDFLAGS" -o dist/auroranet-windows-amd64/auroranet.exe ./client
           CGO_ENABLED=1 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-server ./combined
+          # One binary per service image, laid out as <platform>/<binary> because
+          # the management, signal, relay and proxy Dockerfiles copy from dist.
+          # management links the sqlite store, which needs cgo.
+          CGO_ENABLED=1 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-mgmt ./management
+          CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-signal ./signal
+          CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-relay ./relay
+          CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet-proxy ./proxy/cmd/proxy
+          CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" -o dist/linux/amd64/auroranet ./client
 
       - name: Build Debian package
         run: |
@@ -65,22 +73,45 @@ jobs:
               wixl -o dist/release/auroranet_${VERSION}_windows_amd64.msi /tmp/auroranet.wxs"
 
       - name: Build and push images
+        env:
+          # proxy/Dockerfile uses COPY --chmod, which only BuildKit supports.
+          DOCKER_BUILDKIT: "1"
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker build -f combined/Dockerfile --build-arg TARGETPLATFORM=linux/amd64 \
-            -t "ghcr.io/haxygame-coding/auroranet-server:${VERSION}" -t ghcr.io/haxygame-coding/auroranet-server:latest dist
-          docker push "ghcr.io/haxygame-coding/auroranet-server:${VERSION}"
-          docker push ghcr.io/haxygame-coding/auroranet-server:latest
+
+          # Every image the compose templates and installers reference is built
+          # here, so their tags never point at something that was not published.
+          push_image() {
+            local name="$1" dockerfile="$2" context="$3"
+            local ref="ghcr.io/haxygame-coding/${name}"
+            docker build -f "${dockerfile}" --build-arg TARGETPLATFORM=linux/amd64 \
+              -t "${ref}:${VERSION}" -t "${ref}:latest" "${context}"
+            docker push "${ref}:${VERSION}"
+            docker push "${ref}:latest"
+          }
+
+          push_image auroranet-server combined/Dockerfile dist
+          push_image auroranet-management management/Dockerfile dist
+          push_image auroranet-signal signal/Dockerfile dist
+          push_image auroranet-relay relay/Dockerfile dist
+          push_image auroranet-proxy proxy/Dockerfile dist
+
+          # The client Dockerfile copies the entrypoint from the repo root, so it
+          # builds from the checkout with the binary passed explicitly.
+          docker build -f client/Dockerfile --build-arg AURORANET_BINARY=dist/linux/amd64/auroranet \
+            -t "ghcr.io/haxygame-coding/auroranet-client:${VERSION}" -t ghcr.io/haxygame-coding/auroranet-client:latest .
+          docker push "ghcr.io/haxygame-coding/auroranet-client:${VERSION}"
+          docker push ghcr.io/haxygame-coding/auroranet-client:latest
 
       - name: Checksums and signature
         run: |
           cd dist/release
-          sha256sum *.deb *.pkg.tar.zst *.msi > SHA256SUMS
+          sha256sum ./*.deb ./*.pkg.tar.zst ./*.msi > SHA256SUMS
           if [[ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]]; then
             echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
             gpg --batch --yes --armor --detach-sign SHA256SUMS
-            for f in *.deb *.pkg.tar.zst *.msi; do gpg --batch --yes --armor --detach-sign "$f"; done
+            for f in ./*.deb ./*.pkg.tar.zst ./*.msi; do gpg --batch --yes --armor --detach-sign "$f"; done
           fi
 
       - uses: softprops/action-gh-release@v2

@@ -34,15 +34,15 @@ Docker Hub and execute it with the
 following commands:
 
 ````shell
-docker pull haxygame/signal:latest
-docker run -d --name auroranet-signal -p 10000:10000 haxygame/signal:latest
+docker pull ghcr.io/haxygame-coding/auroranet-signal:latest
+docker run -d --name auroranet-signal -p 10000:10000 ghcr.io/haxygame-coding/auroranet-signal:latest
 ````
 
 The default log-level is set to INFO, if you need you can change it using by
 updating the docker cmd as followed:
 
 ````shell
-docker run -d --name auroranet-signal -p 10000:10000 haxygame/signal:latest --log-level DEBUG
+docker run -d --name auroranet-signal -p 10000:10000 ghcr.io/haxygame-coding/auroranet-signal:latest --log-level DEBUG
 ````
 
 ### Run with TLS (Let's Encrypt).
@@ -67,7 +67,7 @@ docker run -d --name auroranet-signal \
 -p 10000:10000  \
 -p 443:443  \
 -v auroranet-signal:/var/lib/auroranet  \
-haxygame/signal:latest \
+ghcr.io/haxygame-coding/auroranet-signal:latest \
 --letsencrypt-domain <YOUR-DOMAIN>
 ```
 
